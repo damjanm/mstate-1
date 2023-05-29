@@ -29,7 +29,12 @@ cx <- coxph(Surv(Tstart,Tstop,status)~x1.1+x2.2+strata(trans),
 summary(cx)
 
 cx2 <- coxph.relsurv(Surv(Tstart,Tstop,status)~x1.1+x2.2+strata(trans),
-                     data=tglong, split.transitions = 2)
+                     data=tglong %>%
+                       mutate(Tstop=Tstop+runif(nrow(.)), 
+                              x1.2=x1.2+runif(nrow(.)), 
+                              x1.1=x1.1+runif(nrow(.))), 
+                     split.transitions = 2,
+                     rmap = list(age=age))
 
 # new data, to check whether results are the same for transition 1 as
 # those in appendix E.1 of Therneau & Grambsch (2000)
