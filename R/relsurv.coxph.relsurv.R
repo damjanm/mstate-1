@@ -23,9 +23,16 @@
   av <- deparse(formula[[3]])
   kovs <- strsplit(av, '\\+')[[1]]
   
-  relsurv_formula <- list() # Prepare relsurv formulas
+  # Helper function for matching transitions:
+  find_trans <- function(x){
+    x <- gsub(" ", "", x, fixed = TRUE)
+    substr(x, nchar(x)-1, nchar(x))
+  }
+  
+  # Prepare relsurv formulas:
+  relsurv_formula <- list() 
   for(st in split.transitions){
-    relsurv_kovs_tmp <- kovs[grep(paste0('.', st), kovs, fixed=TRUE)]
+    relsurv_kovs_tmp <- kovs[grep(paste0('.', st), sapply(kovs, find_trans), fixed=TRUE)]
     relsurv_formula <- append(relsurv_formula, 
                               as.formula(paste0(deparse(formula[[2]]), '~', paste0(relsurv_kovs_tmp, collapse = '+'))))
   }
@@ -46,7 +53,7 @@
   # relsurv part:
   relsurv_coef <- list()
   relsurv_var <- list()
-  browser()
+
   for(st in split.transitions){
     mod <- relsurv::rsadd(formula = relsurv_formula[[as.character(st)]],
                    data = subset(data, trans==st),
@@ -56,7 +63,7 @@
                    rmap = rmap)
     
  #    mod <- relsurv::rsadd(formula = relsurv_formula[[as.character(st)]],
- #                          data = subset(data, trans==st) %>% 
+ #                          data = subset(data, trans==st) %>%
  # mutate(Tstop=Tstop+runif(nrow(.)), x1.2=x1.2+runif(nrow(.)), x1.1=x1.1+runif(nrow(.))),
  #                          ratetable = ratetable, na.action=na.action,
  #                          method = 'EM', init = init, bwin = bwin,
