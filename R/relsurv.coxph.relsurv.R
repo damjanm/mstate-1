@@ -1,11 +1,31 @@
+#' Fit Extended Proportional Hazards Regression Model with Relative Survival
+#' 
+#' An extension of the survival::coxph function where one can split death-related transitions
+#' and model the corresponding excess hazards using relative survival.
+#' @param formula A formula object, with the response on the left of a ~ operator, and the terms on the right. The response must be a survival object as returned by the Surv function
+#' @param data The data used for fitting the model
+#' @param na.action A missing-data filter function. This is applied to the model.frame after any subset argument has been used. Default is options()\$na.action
+#' @param split.transitions An integer vector containing the numbered transitions that should be split. Use same numbering as in the given transition matrix
+#' @param ratetable The population mortality table. A table of event rates, organized as a ratetable object, see for example relsurv::slopop. Default is slopop
+#' @param time.format Define the time format which is used in the data. Possible options: c('days', 'years', 'months'). Default is 'days'
+#' @param rmap An optional list to be used if the variables in the data are not organized (and named) in the same way as in the ratetable object
+#' @param init Vector of initial values of the iteration used when estimating the effects for the excess hazards. Default initial value is zero for all variables
+#' @param bwin Controls the bandwidth used for smoothing in the EM algorithm when estimating the effects for the excess hazards. The follow-up time is divided into quartiles and bwin specifies a factor by which the maximum between events time length on each interval is multiplied. The default bwin=-1 lets the function find an appropriate value. If bwin=0, no smoothing is applied
+#' @param centered If TRUE, all variables are centered before fitting the EM algorithmg for the excess hazards and the baseline excess hazard is calculated accordingly. Default is FALSE
+#' @param cause An optional vector of the same length as the number of cases if cause of death is (partially) given. Use 0 for population deaths, 1 for disease-specific deaths, 2 (default) for unknown. 
+#' @param ... Other arguments that will be passed to coxph
+#' @return Returns a coxph.relsurv object that contains the coefficient estimates for the extended model
+#' 
+#' @author Damjan Manevski \email{damjan.manevski@@mf.uni-lj.si}
+#' @seealso \code{\link{coxph}}, \code{\link{msfit.relsurv}}, \code{\link[relsurv]{rsadd}}
+#' 
+#' @export
 `coxph.relsurv` <- function(formula, data, na.action,
                             split.transitions, ratetable = relsurv::slopop, 
                             time.format = "days", rmap, 
                             init, bwin, centered, cause,
                             ...
 ){
-  # ... other arguments will be passed to coxph
-  
   # cause: A vector of the same length as the number of rows in data. 0 for population deaths, 1 for disease specific deaths, 2 (default) for unknown.
 
   # TO DO:
@@ -103,8 +123,8 @@
   
   ##### #
   # relsurv part:
-  relsurv_coef <- list()
-  relsurv_var <- list()
+  coefficients_relsurv <- list()
+  var_relsurv <- list()
 
   for(st in split.transitions){
     if(!missing(init)){
@@ -112,11 +132,11 @@
     }
     
     if(!missing(cause)){
-      cause <- na.omit(cause_arg[data$trans==st])
+      cause <- cause_arg[data$trans==st]
     }
     
     mod <- relsurv::rsadd(formula = relsurv_formula[[as.character(st)]],
-                   data = subset(data, trans==st),
+                   data = data[data$trans==st,],
                    ratetable = ratetable, na.action=na.action,
                    method = 'EM', init = init, bwin = bwin,
                    centered = centered, cause = cause,
@@ -130,14 +150,14 @@
  #                          centered = centered, cause = cause,
  #                          rmap = rmap)
     
-    relsurv_coef <- append(relsurv_coef, list(mod$coefficients))
-    relsurv_var <- append(relsurv_var, list(mod$var))
+    coefficients_relsurv <- append(coefficients_relsurv, list(mod$coefficients))
+    var_relsurv <- append(var_relsurv, list(mod$var))
   }
-  names(relsurv_coef) <- split.transitions
-  names(relsurv_var) <- split.transitions
+  names(coefficients_relsurv) <- split.transitions
+  names(var_relsurv) <- split.transitions
   
-  cx$relsurv_coef <- relsurv_coef
-  cx$relsurv_var <- relsurv_var
+  cx$coefficients_relsurv <- coefficients_relsurv
+  cx$var_relsurv <- var_relsurv
   cx$split.transitions <- split.transitions
   
   cx2 <- cx
@@ -176,7 +196,18 @@
 }
 
 
-print.coxph.relsurv <- function (x, digits = max(1L, getOption("digits") - 3L), signif.stars = FALSE, 
+#' Print method for coxph.relsurv object
+#' 
+#' Print method for coxph.relsurv object
+#' @param x Object of class coxph.relsurv to be printed
+#' @param digits Number of digits
+#' @param signif.stars Should significance stars be printed
+#' @param ... Further arguments to print
+#' 
+#' @author Damjan Manevski \email{damjan.manevski@@mf.uni-lj.si}
+#' @seealso \code{\link{coxph.relsurv}}
+#' 
+`print.coxph.relsurv` <- function (x, digits = max(1L, getOption("digits") - 3L), signif.stars = FALSE, 
                                  ...){
   if (!is.null(cl <- x$call)) {
     cat("Call:\n")
@@ -195,14 +226,14 @@ print.coxph.relsurv <- function (x, digits = max(1L, getOption("digits") - 3L), 
   if (is.null(coef) | is.null(se)) 
     stop("Input is not valid")
   if (is.null(x$naive.var)) {
-    tmp <- cbind(coef, exp(coef), se, coef/se, pchisq((coef/se)^2, 
+    tmp <- cbind(coef, exp(coef), se, coef/se, stats::pchisq((coef/se)^2, 
                                                       1, lower.tail = FALSE))
     dimnames(tmp) <- list(names(coef), c("coef", "exp(coef)", 
                                          "se(coef)", "z", "p"))
   }
   else {
     nse <- sqrt(diag(x$naive.var))
-    tmp <- cbind(coef, exp(coef), nse, se, coef/se, pchisq((coef/se)^2, 
+    tmp <- cbind(coef, exp(coef), nse, se, coef/se, stats::pchisq((coef/se)^2, 
                                                            1, lower.tail = FALSE))
     dimnames(tmp) <- list(names(coef), c("coef", "exp(coef)", 
                                          "se(coef)", "robust se", "z", "p"))
@@ -217,11 +248,11 @@ print.coxph.relsurv <- function (x, digits = max(1L, getOption("digits") - 3L), 
   remember_names <- c()
   
   for(st in st_ch){
-    coef <- x$relsurv_coef[[st]]
-    se <- sqrt(diag(x$relsurv_var[[st]]))
+    coef <- x$coefficients_relsurv[[st]]
+    se <- sqrt(diag(x$var_relsurv[[st]]))
     
     tmp_j <- cbind(coef, exp(coef), se, 
-                 coef/se, pchisq((coef/se)^2, 
+                 coef/se, stats::pchisq((coef/se)^2, 
                                  1, lower.tail = FALSE))
     if(!exists('tmp_rs')){
       tmp_rs <- tmp_j
@@ -245,6 +276,6 @@ print.coxph.relsurv <- function (x, digits = max(1L, getOption("digits") - 3L), 
     cat(", number of events=", x$nevent, "\n")
   else cat("\n")
   if (length(omit)) 
-    cat("   (", naprint(omit), ")\n", sep = "")
+    cat("   (", stats::naprint(omit), ")\n", sep = "")
   invisible(x)
 }
