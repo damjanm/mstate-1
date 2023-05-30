@@ -109,7 +109,7 @@
   }
   if (length(wh.year) > 0) {
     if (min(R[, wh.year]) > 1850 & max(R[, wh.year]) < 2020 & 
-        class(cutpoints[[wh.year]]) == "rtdate") 
+        inherits(cutpoints[[wh.year]], "rtdate"))
       warning("The calendar year must be one of the date classes (Date, date, POSIXt)\n (Your variable seems to be expressed in years) \n")
   }
   if (nrt != ncol(R)) {
@@ -173,8 +173,7 @@
   if (mm != 0) 
     data <- cbind(data, X)
   attr(ratetable, "cutpoints") <- lapply(cutpoints, function(x) {
-    if (class(x) == "rtabledate") 
-      class(x) <- "date"
+    if(inherits(x, 'rtabledate')) class(x) <- 'date'
     x
   })
   out <- list(data = data, R = R, status = status, start = start, 
