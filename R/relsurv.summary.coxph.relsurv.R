@@ -17,13 +17,13 @@ summary.coxph.relsurv <- function (object, conf.int = 0.95, scale = 1, ...)
   if (!is.null(cox$nevent)) 
     rval$nevent <- cox$nevent
   # if (is.null(cox$naive.var)) {
-  tmp <- cbind(beta, exp(beta), se, beta/se, pchisq((beta/se)^2, 
+  tmp <- cbind(beta, exp(beta), se, beta/se, stats::pchisq((beta/se)^2, 
                                                     1, lower.tail = FALSE))
   dimnames(tmp) <- list(names(beta), c("coef", "exp(coef)", 
                                        "se(coef)", "z", "Pr(>|z|)"))
   # }
   # else {
-  #   tmp <- cbind(beta, exp(beta), nse, se, beta/se, pchisq((beta/se)^2, 
+  #   tmp <- cbind(beta, exp(beta), nse, se, beta/se, stats::pchisq((beta/se)^2, 
   #                                                          1, lower.tail = FALSE))
   #   dimnames(tmp) <- list(names(beta), c("coef", "exp(coef)", 
   #                                        "se(coef)", "robust se", "z", "Pr(>|z|)"))
@@ -36,11 +36,11 @@ summary.coxph.relsurv <- function (object, conf.int = 0.95, scale = 1, ...)
   remember_names <- c()
   
   for(st in st_ch){
-    coef <- cox$relsurv_coef[[st]]
-    se <- sqrt(diag(cox$relsurv_var[[st]]))
+    coef <- cox$coefficients_relsurv[[st]]
+    se <- sqrt(diag(cox$var_relsurv[[st]]))
     
     tmp_j <- cbind(coef, exp(coef), se, 
-                   coef/se, pchisq((coef/se)^2, 
+                   coef/se, stats::pchisq((coef/se)^2, 
                                    1, lower.tail = FALSE))
     if(!exists('tmp_rs')){
       tmp_rs <- tmp_j
@@ -52,7 +52,7 @@ summary.coxph.relsurv <- function (object, conf.int = 0.95, scale = 1, ...)
   
   dimnames(tmp_rs) <- list(remember_names, c("coef", "exp(coef)", 
                                              "se(coef)", "z", "Pr(>|z|)"))
-  rval$relsurv_coef <- tmp_rs
+  rval$coefficients_relsurv <- tmp_rs
   
   
   if (conf.int) {
@@ -75,17 +75,17 @@ summary.coxph.relsurv <- function (object, conf.int = 0.95, scale = 1, ...)
   }
   df <- length(beta2)
   logtest <- -2 * (cox$loglik[1] - cox$loglik[2])
-  rval$logtest <- c(test = logtest, df = df, pvalue = pchisq(logtest, 
+  rval$logtest <- c(test = logtest, df = df, pvalue = stats::pchisq(logtest, 
                                                              df, lower.tail = FALSE))
-  # rval$sctest <- c(test = cox$score, df = df, pvalue = pchisq(cox$score, 
+  # rval$sctest <- c(test = cox$score, df = df, pvalue = stats::pchisq(cox$score, 
   #                                                             df, lower.tail = FALSE))
   # rval$rsq <- c(rsq = 1 - exp(-logtest/cox$n), maxrsq = 1 - 
   #                 exp(2 * cox$loglik[1]/cox$n))
   # rval$waldtest <- c(test = as.vector(round(cox$wald.test, 
-  #                                           2)), df = df, pvalue = pchisq(as.vector(cox$wald.test), 
+  #                                           2)), df = df, pvalue = stats::pchisq(as.vector(cox$wald.test), 
   #                                                                         df, lower.tail = FALSE))
   # if (!is.null(cox$rscore)) 
-  #   rval$robscore <- c(test = cox$rscore, df = df, pvalue = pchisq(cox$rscore, 
+  #   rval$robscore <- c(test = cox$rscore, df = df, pvalue = stats::pchisq(cox$rscore, 
   #                                                                  df, lower.tail = FALSE))
   # rval$used.robust <- !is.null(cox$naive.var)
   # if (!is.null(cox$concordance)) {
@@ -97,8 +97,8 @@ summary.coxph.relsurv <- function (object, conf.int = 0.95, scale = 1, ...)
   #   rval$states <- cox$states
   # }
   
-  # rval$relsurv_coef <- cox$relsurv_coef
-  # rval$relsurv_var <- cox$relsurv_var
+  # rval$coefficients_relsurv <- cox$coefficients_relsurv
+  # rval$var_relsurv <- cox$var_relsurv
   
   class(rval) <- "summary.coxph.relsurv"
   rval
@@ -124,17 +124,17 @@ print.summary.coxph.relsurv <- function (x, digits = max(getOption("digits") - 3
     cat(", number of events=", x$nevent, "\n")
   else cat("\n")
   if (length(omit)) 
-    cat("   (", naprint(omit), ")\n", sep = "")
-  if (nrow(x$coef) == 0) {
-    cat("   Null model\n")
-    return()
-  }
+    cat("   (", stats::naprint(omit), ")\n", sep = "")
+  # if (nrow(x$coef) == 0) {
+  #   cat("   Null model\n")
+  #   return()
+  # }
   
   if (!is.null(x$coefficients)) {
     cat("\n")
     cat("Non-split transitions:\n \n")
     
-    printCoefmat(x$coefficients, digits = digits, signif.stars = FALSE, 
+    stats::printCoefmat(x$coefficients, digits = digits, signif.stars = FALSE, 
                  ...)
   }
   if (!is.null(x$conf.int)) {
@@ -145,7 +145,7 @@ print.summary.coxph.relsurv <- function (x, digits = max(getOption("digits") - 3
   cat("\n")
   cat("Excess transitions:\n \n")
   
-  printCoefmat(x$relsurv_coef, digits = digits, signif.stars = FALSE, 
+  stats::printCoefmat(x$coefficients_relsurv, digits = digits, signif.stars = FALSE, 
                ...)
   
   if (!is.null(x$conf.int.rs)) {
@@ -154,7 +154,7 @@ print.summary.coxph.relsurv <- function (x, digits = max(getOption("digits") - 3
   }
   
   # cat("\n")
-  cat("---\nSignif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1")
+  # cat("---\nSignif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1")
   
   invisible()
 }
