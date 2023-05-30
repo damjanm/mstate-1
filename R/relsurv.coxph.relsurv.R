@@ -1,6 +1,6 @@
 `coxph.relsurv` <- function(formula, data, na.action,
                             split.transitions, ratetable = relsurv::slopop, 
-                            time.format = "days", rmap, variance,
+                            time.format = "days", rmap, 
                             init, bwin, centered, cause,
                             ...
 ){
@@ -8,10 +8,9 @@
   
   # cause: A vector of the same length as the number of rows in data. 0 for population deaths, 1 for disease specific deaths, 2 (default) for unknown.
 
-  # Torek: 
-  # time.format
+  # TO DO:
   # variance?
-  
+
   Call <- match.call()
   
   if(missing(split.transitions)){
@@ -34,6 +33,37 @@
   
   if(!missing(cause)){
     cause_arg <- cause
+  }
+  
+  # Define time-related objects:
+  Year <- 365.241
+  Month <- Year/12
+  
+  time.format.orig <- time.format
+  
+  if(time.format == "days"){
+    if(max(data$time) < 30) warning("Your max time in the data is less than 30 days. If time is not stored in days, please use argument time.format. \n")
+  }
+  else if(time.format == "years"){
+    if(max(data$time) > 100) warning("Your max time in the data is more than 100 years. If time is not stored in years, please use argument time.format. \n")
+    
+    data$Tstart <- data$Tstart*Year
+    data$Tstop <- data$Tstop*Year
+    data$time <- data$time*Year
+
+    time.format <- "days" # Fix argument
+  }
+  else if(time.format == "months"){
+    if(max(data$time) > 600) warning("Your max time in the data is more than 600 months. If time is not stored in months, please use argument time.format. \n")
+    
+    data$Tstart <- data$Tstart*Month
+    data$Tstop <- data$Tstop*Month
+    data$time <- data$time*Month
+
+    time.format <- "days" # Fix argument
+  }
+  else{
+    stop("Argument time.format should take values in c('days', 'years', 'months').")
   }
   
   ##### #
