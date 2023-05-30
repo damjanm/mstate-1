@@ -143,6 +143,26 @@
   cx2 <- cx
   cx2$call <- Call
   
+  # Remove coxph objects you do not need:
+  cx2$loglik <- NULL
+  cx2$score <- NULL
+  cx2$iter <- NULL
+  cx2$means <- NULL
+  cx2$first <- NULL
+  cx2$info <- NULL
+  cx2$method <- NULL
+  cx2$assign <- NULL
+  cx2$wald.test <- NULL
+  cx2$concordance <- NULL
+  cx2$y <- NULL
+  cx2$timefix <- NULL
+  cx2$formula <- NULL
+  cx2$xlevels <- NULL
+  
+  cx2$linear.predictors <- NULL
+  cx2$residuals <- NULL
+  cx2$terms <- NULL
+  
   class(cx2) <- 'coxph.relsurv'
   
   

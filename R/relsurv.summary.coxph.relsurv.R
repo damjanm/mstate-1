@@ -77,25 +77,25 @@ summary.coxph.relsurv <- function (object, conf.int = 0.95, scale = 1, ...)
   logtest <- -2 * (cox$loglik[1] - cox$loglik[2])
   rval$logtest <- c(test = logtest, df = df, pvalue = pchisq(logtest, 
                                                              df, lower.tail = FALSE))
-  rval$sctest <- c(test = cox$score, df = df, pvalue = pchisq(cox$score, 
-                                                              df, lower.tail = FALSE))
-  rval$rsq <- c(rsq = 1 - exp(-logtest/cox$n), maxrsq = 1 - 
-                  exp(2 * cox$loglik[1]/cox$n))
-  rval$waldtest <- c(test = as.vector(round(cox$wald.test, 
-                                            2)), df = df, pvalue = pchisq(as.vector(cox$wald.test), 
-                                                                          df, lower.tail = FALSE))
-  if (!is.null(cox$rscore)) 
-    rval$robscore <- c(test = cox$rscore, df = df, pvalue = pchisq(cox$rscore, 
-                                                                   df, lower.tail = FALSE))
-  rval$used.robust <- !is.null(cox$naive.var)
-  if (!is.null(cox$concordance)) {
-    rval$concordance <- cox$concordance[6:7]
-    names(rval$concordance) <- c("C", "se(C)")
-  }
-  if (inherits(cox, "coxphms")) {
-    rval$cmap <- cox$cmap
-    rval$states <- cox$states
-  }
+  # rval$sctest <- c(test = cox$score, df = df, pvalue = pchisq(cox$score, 
+  #                                                             df, lower.tail = FALSE))
+  # rval$rsq <- c(rsq = 1 - exp(-logtest/cox$n), maxrsq = 1 - 
+  #                 exp(2 * cox$loglik[1]/cox$n))
+  # rval$waldtest <- c(test = as.vector(round(cox$wald.test, 
+  #                                           2)), df = df, pvalue = pchisq(as.vector(cox$wald.test), 
+  #                                                                         df, lower.tail = FALSE))
+  # if (!is.null(cox$rscore)) 
+  #   rval$robscore <- c(test = cox$rscore, df = df, pvalue = pchisq(cox$rscore, 
+  #                                                                  df, lower.tail = FALSE))
+  # rval$used.robust <- !is.null(cox$naive.var)
+  # if (!is.null(cox$concordance)) {
+  #   rval$concordance <- cox$concordance[6:7]
+  #   names(rval$concordance) <- c("C", "se(C)")
+  # }
+  # if (inherits(cox, "coxphms")) {
+  #   rval$cmap <- cox$cmap
+  #   rval$states <- cox$states
+  # }
   
   # rval$relsurv_coef <- cox$relsurv_coef
   # rval$relsurv_var <- cox$relsurv_var
