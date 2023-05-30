@@ -25,8 +25,8 @@
   se <- sqrt(diag(cox$var)) * scale
   # if (!is.null(cox$naive.var)) 
   #   nse <- sqrt(diag(cox$naive.var))
-  rval <- list(call = cox$call, fail = cox$fail, na.action = cox$na.action, 
-               n = cox$n, loglik = cox$loglik)
+  rval <- list(call = cox$call, #fail = cox$fail, na.action = cox$na.action, loglik = cox$loglik, 
+               n = cox$n)
   if (!is.null(cox$nevent)) 
     rval$nevent <- cox$nevent
   # if (is.null(cox$naive.var)) {
@@ -86,10 +86,10 @@
     rval$conf.int.rs <- tmp_rs2
     
   }
-  df <- length(beta2)
-  logtest <- -2 * (cox$loglik[1] - cox$loglik[2])
-  rval$logtest <- c(test = logtest, df = df, pvalue = stats::pchisq(logtest, 
-                                                             df, lower.tail = FALSE))
+  # df <- length(beta2)
+  # logtest <- -2 * (cox$loglik[1] - cox$loglik[2])
+  # rval$logtest <- c(test = logtest, df = df, pvalue = stats::pchisq(logtest, 
+  #                                                            df, lower.tail = FALSE))
   # rval$sctest <- c(test = cox$score, df = df, pvalue = stats::pchisq(cox$score, 
   #                                                             df, lower.tail = FALSE))
   # rval$rsq <- c(rsq = 1 - exp(-logtest/cox$n), maxrsq = 1 - 
