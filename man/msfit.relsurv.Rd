@@ -105,9 +105,9 @@ plot(pt, use.ggplot = TRUE)
 }
 }
 \references{
-Manevski D, Putter H, Pohar Perme M, Bonneville EF, Schetelig J, de Wreede LC (2021).
+Manevski D, Putter H, Pohar Perme M, Bonneville EF, Schetelig J, de Wreede LC (2022).
 Integrating relative survival in multi-state models -- a non-parametric approach.
-https://arxiv.org/abs/2106.12399
+https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9245158/
 }
 \seealso{
 \code{\link{msfit}}

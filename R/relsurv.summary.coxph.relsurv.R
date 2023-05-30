@@ -1,4 +1,16 @@
-summary.coxph.relsurv <- function (object, conf.int = 0.95, scale = 1, ...) 
+#' Summary method for coxph.relsurv object
+#' 
+#' Produces a summary of a fitted coxph.relsurv model.
+#' @param object The result of a coxph.relsurv fit
+#' @param conf.int Level for computation of the confidence intervals. If set to FALSE no confidence intervals are printed
+#' @param scale Vector of scale factors for the coefficients, defaults to 1. The printed coefficients, se, and confidence intervals will be associated with one scale unit
+#' @param ... For future methods
+#' @return An object of class summary.coxph.relsurv
+#' 
+#' @author Damjan Manevski \email{damjan.manevski@@mf.uni-lj.si}
+#' @seealso \code{\link{coxph.relsurv}}
+#' 
+`summary.coxph.relsurv` <- function (object, conf.int = 0.95, scale = 1, ...) 
 {
   cox <- object
   beta <- cox$coefficients * scale
@@ -104,7 +116,18 @@ summary.coxph.relsurv <- function (object, conf.int = 0.95, scale = 1, ...)
   rval
 }
 
-print.summary.coxph.relsurv <- function (x, digits = max(getOption("digits") - 3, 3), signif.stars = getOption("show.signif.stars"), 
+#' Print method for summary.coxph.relsurv objects
+#' 
+#' Produces a printed summary of a fitted coxph.relsurv model
+#' @param x The result of a call to summary.coxph.relsurv
+#' @param digits significant digits to print
+#' @param expand If the summary is for a multi-state coxph fit, print the results in an expanded format
+#' @param ... For future methods
+#' 
+#' @author Damjan Manevski \email{damjan.manevski@@mf.uni-lj.si}
+#' @seealso \code{\link{coxph.relsurv}}, \code{\link{summary.coxph.relsurv}}
+#' 
+`print.summary.coxph.relsurv` <- function (x, digits = max(getOption("digits") - 3, 3), #signif.stars = getOption("show.signif.stars"), 
                                          expand = FALSE, ...) 
 {
   if (!is.null(x$call)) {
