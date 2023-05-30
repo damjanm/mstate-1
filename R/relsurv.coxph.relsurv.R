@@ -26,7 +26,6 @@
                             init, bwin, centered, cause,
                             ...
 ){
-  # cause: A vector of the same length as the number of rows in data. 0 for population deaths, 1 for disease specific deaths, 2 (default) for unknown.
 
   # TO DO:
   # variance?
@@ -123,8 +122,8 @@
   
   ##### #
   # relsurv part:
-  coefficients_relsurv <- list()
-  var_relsurv <- list()
+  relsurv.coefficients <- list()
+  relsurv.var <- list()
 
   for(st in split.transitions){
     if(!missing(init)){
@@ -141,23 +140,15 @@
                    method = 'EM', init = init, bwin = bwin,
                    centered = centered, cause = cause,
                    rmap = rmap)
-    
- #    mod <- relsurv::rsadd(formula = relsurv_formula[[as.character(st)]],
- #                          data = subset(data, trans==st) %>%
- # mutate(Tstop=Tstop+runif(nrow(.)), x1.2=x1.2+runif(nrow(.)), x1.1=x1.1+runif(nrow(.))),
- #                          ratetable = ratetable, na.action=na.action,
- #                          method = 'EM', init = init, bwin = bwin,
- #                          centered = centered, cause = cause,
- #                          rmap = rmap)
-    
-    coefficients_relsurv <- append(coefficients_relsurv, list(mod$coefficients))
-    var_relsurv <- append(var_relsurv, list(mod$var))
+
+    relsurv.coefficients <- append(relsurv.coefficients, list(mod$coefficients))
+    relsurv.var <- append(relsurv.var, list(mod$var))
   }
-  names(coefficients_relsurv) <- split.transitions
-  names(var_relsurv) <- split.transitions
+  names(relsurv.coefficients) <- split.transitions
+  names(relsurv.var) <- split.transitions
   
-  cx$coefficients_relsurv <- coefficients_relsurv
-  cx$var_relsurv <- var_relsurv
+  cx$relsurv.coefficients <- relsurv.coefficients
+  cx$relsurv.var <- relsurv.var
   cx$split.transitions <- split.transitions
   
   cx2 <- cx
@@ -207,6 +198,7 @@
 #' @author Damjan Manevski \email{damjan.manevski@@mf.uni-lj.si}
 #' @seealso \code{\link{coxph.relsurv}}
 #' 
+#' @export 
 `print.coxph.relsurv` <- function (x, digits = max(1L, getOption("digits") - 3L), signif.stars = FALSE, 
                                  ...){
   if (!is.null(cl <- x$call)) {
@@ -220,36 +212,36 @@
   
   cat("Non-split transitions:\n \n")
   
-  coef <- x$coefficients
-  se <- sqrt(diag(x$var))
-  
-  if (is.null(coef) | is.null(se)) 
-    stop("Input is not valid")
-  if (is.null(x$naive.var)) {
-    tmp <- cbind(coef, exp(coef), se, coef/se, stats::pchisq((coef/se)^2, 
-                                                      1, lower.tail = FALSE))
-    dimnames(tmp) <- list(names(coef), c("coef", "exp(coef)", 
-                                         "se(coef)", "z", "p"))
+  if(!is.null(x$coefficients)){
+    coef <- x$coefficients
+    se <- sqrt(diag(x$var))
+    
+    if (is.null(x$naive.var)) {
+      tmp <- cbind(coef, exp(coef), se, coef/se, stats::pchisq((coef/se)^2, 
+                                                               1, lower.tail = FALSE))
+      dimnames(tmp) <- list(names(coef), c("coef", "exp(coef)", 
+                                           "se(coef)", "z", "p"))
+    }
+    else {
+      nse <- sqrt(diag(x$naive.var))
+      tmp <- cbind(coef, exp(coef), nse, se, coef/se, stats::pchisq((coef/se)^2, 
+                                                                    1, lower.tail = FALSE))
+      dimnames(tmp) <- list(names(coef), c("coef", "exp(coef)", 
+                                           "se(coef)", "robust se", "z", "p"))
+    }
+    
+    stats::printCoefmat(tmp, digits = digits, P.values = TRUE,
+                        has.Pvalue = TRUE, signif.stars = signif.stars, ...)
   }
-  else {
-    nse <- sqrt(diag(x$naive.var))
-    tmp <- cbind(coef, exp(coef), nse, se, coef/se, stats::pchisq((coef/se)^2, 
-                                                           1, lower.tail = FALSE))
-    dimnames(tmp) <- list(names(coef), c("coef", "exp(coef)", 
-                                         "se(coef)", "robust se", "z", "p"))
-  }
-  
-  stats::printCoefmat(tmp, digits = digits, P.values = TRUE,
-                      has.Pvalue = TRUE, signif.stars = signif.stars, ...)
-  
+
   cat("\nExcess transitions:\n \n")
   
   st_ch <- as.character(x$split.transitions)
   remember_names <- c()
   
   for(st in st_ch){
-    coef <- x$coefficients_relsurv[[st]]
-    se <- sqrt(diag(x$var_relsurv[[st]]))
+    coef <- x$relsurv.coefficients[[st]]
+    se <- sqrt(diag(x$relsurv.var[[st]]))
     
     tmp_j <- cbind(coef, exp(coef), se, 
                  coef/se, stats::pchisq((coef/se)^2, 

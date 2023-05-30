@@ -10,6 +10,7 @@
 #' @author Damjan Manevski \email{damjan.manevski@@mf.uni-lj.si}
 #' @seealso \code{\link{coxph.relsurv}}
 #' 
+#' @export 
 `summary.coxph.relsurv` <- function (object, conf.int = 0.95, scale = 1, ...) 
 {
   cox <- object
@@ -48,8 +49,8 @@
   remember_names <- c()
   
   for(st in st_ch){
-    coef <- cox$coefficients_relsurv[[st]]
-    se <- sqrt(diag(cox$var_relsurv[[st]]))
+    coef <- cox$relsurv.coefficients[[st]]
+    se <- sqrt(diag(cox$relsurv.var[[st]]))
     
     tmp_j <- cbind(coef, exp(coef), se, 
                    coef/se, stats::pchisq((coef/se)^2, 
@@ -64,7 +65,7 @@
   
   dimnames(tmp_rs) <- list(remember_names, c("coef", "exp(coef)", 
                                              "se(coef)", "z", "Pr(>|z|)"))
-  rval$coefficients_relsurv <- tmp_rs
+  rval$relsurv.coefficients <- tmp_rs
   
   
   if (conf.int) {
@@ -109,8 +110,8 @@
   #   rval$states <- cox$states
   # }
   
-  # rval$coefficients_relsurv <- cox$coefficients_relsurv
-  # rval$var_relsurv <- cox$var_relsurv
+  # rval$relsurv.coefficients <- cox$relsurv.coefficients
+  # rval$relsurv.var <- cox$relsurv.var
   
   class(rval) <- "summary.coxph.relsurv"
   rval
@@ -127,6 +128,7 @@
 #' @author Damjan Manevski \email{damjan.manevski@@mf.uni-lj.si}
 #' @seealso \code{\link{coxph.relsurv}}, \code{\link{summary.coxph.relsurv}}
 #' 
+#' @export 
 `print.summary.coxph.relsurv` <- function (x, digits = max(getOption("digits") - 3, 3), #signif.stars = getOption("show.signif.stars"), 
                                          expand = FALSE, ...) 
 {
@@ -168,7 +170,7 @@
   cat("\n")
   cat("Excess transitions:\n \n")
   
-  stats::printCoefmat(x$coefficients_relsurv, digits = digits, signif.stars = FALSE, 
+  stats::printCoefmat(x$relsurv.coefficients, digits = digits, signif.stars = FALSE, 
                ...)
   
   if (!is.null(x$conf.int.rs)) {
