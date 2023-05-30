@@ -6,7 +6,11 @@
 ){
   # ... other arguments will be passed to coxph
   
-  # time.format, variance?
+  # cause: A vector of the same length as the number of rows in data. 0 for population deaths, 1 for disease specific deaths, 2 (default) for unknown.
+
+  # Torek: 
+  # time.format
+  # variance?
   
   Call <- match.call()
   
@@ -16,6 +20,20 @@
   
   if(missing(centered)){
     centered <- FALSE
+  }
+  
+  if(!missing(rmap)){
+    # if(substitution){
+      rmap <- substitute(rmap)
+    # }
+  }
+  
+  if(!missing(init)){
+    init_arg <- init
+  }
+  
+  if(!missing(cause)){
+    cause_arg <- cause
   }
   
   ##### #
@@ -31,12 +49,16 @@
   
   # Prepare relsurv formulas:
   relsurv_formula <- list() 
+  relsurv_no_of_covs <- list()
   for(st in split.transitions){
     relsurv_kovs_tmp <- kovs[grep(paste0('.', st), sapply(kovs, find_trans), fixed=TRUE)]
     relsurv_formula <- append(relsurv_formula, 
                               as.formula(paste0(deparse(formula[[2]]), '~', paste0(relsurv_kovs_tmp, collapse = '+'))))
+    relsurv_no_of_covs <- append(relsurv_no_of_covs,
+                                 length(relsurv_kovs_tmp))
   }
   names(relsurv_formula) <- split.transitions
+  names(relsurv_no_of_covs) <- split.transitions
   
 
   for(st in split.transitions){
@@ -55,6 +77,14 @@
   relsurv_var <- list()
 
   for(st in split.transitions){
+    if(!missing(init)){
+      init <- rep(init_arg, relsurv_no_of_covs[[as.character(st)]])
+    }
+    
+    if(!missing(cause)){
+      cause <- na.omit(cause_arg[data$trans==st])
+    }
+    
     mod <- relsurv::rsadd(formula = relsurv_formula[[as.character(st)]],
                    data = subset(data, trans==st),
                    ratetable = ratetable, na.action=na.action,
@@ -143,7 +173,6 @@ print.coxph.relsurv <- function (x, digits = max(1L, getOption("digits") - 3L), 
   cat("\nExcess transitions:\n \n")
   
   st_ch <- as.character(x$split.transitions)
-  
   remember_names <- c()
   
   for(st in st_ch){
