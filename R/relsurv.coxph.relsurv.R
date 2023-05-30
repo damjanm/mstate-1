@@ -32,8 +32,24 @@
 
   Call <- match.call()
   
+  # Check split.transitions argument value:
+  trans_df <- as.data.frame(unique(data[,c('from', 'to', 'trans')]))
+  
   if(missing(split.transitions)){
     stop('The split.transitions argument is empty.')
+  }
+  else{
+    if(inherits(split.transitions, c('numeric', 'integer'))){
+      if(!all(split.transitions %in% trans_df$trans)) stop("Invalid transitions used inside argument split.transitions.")
+    }
+    else stop("Argument split.transitions expects values of class numeric/integer.")
+    
+    # Check intermediate states:
+    
+    to_vals <- unique(trans_df$to)[which(unique(trans_df$to) %in% unique(trans_df$from))]
+    intermediate_transitions <- trans_df$trans[trans_df$to %in% to_vals]
+    
+    if(any(split.transitions %in% intermediate_transitions)) stop("You've listed an intermediate transition for which the hazard would have to be split in excess and population hazard. Population mortality tables for intermediate events haven't been implemented in this function. Please include only transitions that go to death states in the split.transitions argument.")
   }
   
   if(missing(centered)){
@@ -101,6 +117,7 @@
   relsurv_no_of_covs <- list()
   for(st in split.transitions){
     relsurv_kovs_tmp <- kovs[grep(paste0('.', st), sapply(kovs, find_trans), fixed=TRUE)]
+    if(length(relsurv_kovs_tmp)==0) stop('In split.transitions you have supplied a transition for which there are no covariates in the formula.')
     relsurv_formula <- append(relsurv_formula, 
                               as.formula(paste0(deparse(formula[[2]]), '~', paste0(relsurv_kovs_tmp, collapse = '+'))))
     relsurv_no_of_covs <- append(relsurv_no_of_covs,
