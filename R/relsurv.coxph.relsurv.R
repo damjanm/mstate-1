@@ -98,7 +98,7 @@
   kovs <- paste0(kovs, collapse='+')
   coxph_formula <- as.formula(paste0(deparse(formula[[2]]), '~', kovs))
   
-  cx <- survival::coxph(formula=coxph_formula, data=data, method='breslow',
+  cx <- survival::coxph(formula=coxph_formula, data=data,
                         na.action=na.action, ...)
   
   ##### #
@@ -158,24 +158,15 @@
   cx2$timefix <- NULL
   cx2$formula <- NULL
   cx2$xlevels <- NULL
-  
+  # Maybe use them:
   cx2$linear.predictors <- NULL
   cx2$residuals <- NULL
   cx2$terms <- NULL
   
   class(cx2) <- 'coxph.relsurv'
   
-  
   return(cx2)
-  
-  # iz coxph kokr gledam lahko kvecjemu dodas:
-  # coefficients
-  # var
-  # linear predictors
-  # residuals
-  
-  # preveri katere objekte rabis iz coxph v msfit/probtrans
-  
+
   # Liesbeth:
   # coxph - should be use breslow? What about remaining arguments from coxph
   
