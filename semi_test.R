@@ -1,4 +1,5 @@
 library(mstate)
+library(dplyr)
 
 # data in wide format, for transition 1 this is dataset E1 of
 # Therneau & Grambsch (2000)
@@ -7,9 +8,9 @@ tg <- data.frame(illt=c(1,1,6,6,8,9),ills=c(1,0,1,1,0,1),
                  x1=c(1,1,1,0,0,0),x2=c(6:1))
 
 
-tmat <- trans.illdeath()
+tmat <- transMat(list(c(2,3), c(4),c(), c()), c('Healthy', 'Relapse', 'NRM', 'DaR'))
 # data in long format using msprep
-tglong0 <- msprep(time=c(NA,"illt","dt"),status=c(NA,"ills","ds"),
+tglong0 <- msprep(time=c(NA,"illt","dt","dt"),status=c(NA,"ills","ds","ds"),
                   data=tg,keep=c("x1","x2"),trans=tmat)
 # expanded covariates
 tglong <- expand.covs(tglong0,c("x1","x2"))
@@ -24,23 +25,39 @@ tglong <- rbind(tglong,tglong,tglong,tglong,tglong)
 
 
 # Cox model with different covariate
-cx <- coxph(Surv(Tstart,Tstop,status)~x1.1+x2.2+strata(trans),
+cx <- coxph(Surv(Tstart,Tstop,status)~x1.1+x2.2+x2.3+strata(trans),
             data=tglong,method="breslow")
+cx
 summary(cx)
 
-cx2 <- coxph.relsurv(Surv(Tstart,Tstop,status)~x1.1+x2.2+strata(trans),
+cx2 <- coxph.relsurv(Surv(Tstart,Tstop,status)~x1.1+x2.2+x2.3+strata(trans),
                      data=tglong %>%
                        mutate(Tstop=Tstop+runif(nrow(.)), 
                               x1.2=x1.2+runif(nrow(.)), 
                               x1.1=x1.1+runif(nrow(.))), 
-                     split.transitions = 2,
+                     split.transitions = c(2,3),
                      rmap = list(age=age))
+cx2
+summary(cx2)
 
 # new data, to check whether results are the same for transition 1 as
 # those in appendix E.1 of Therneau & Grambsch (2000)
 newdata <- data.frame(trans=1:3,x1.1=c(0,0,0),x2.2=c(0,1,0),strata=1:3)
 mod <- msfit(cx,newdata,trans=tmat)
+mod
+
+msfit.coxph.relsurv(cx2,newdata = newdata, trans = tmat)
+
+
+
+
+
+
+
+
+
 pt <- probtrans(mod,predt=0)
+
 
 
 # Non-parametric:
