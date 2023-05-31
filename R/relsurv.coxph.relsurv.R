@@ -136,7 +136,8 @@
   
   cx <- survival::coxph(formula=coxph_formula, data=data,
                         na.action=na.action, ...)
-  
+  coxph.object <- cx
+
   ##### #
   # relsurv part:
   relsurv.coefficients <- list()
@@ -190,6 +191,8 @@
   cx2$linear.predictors <- NULL
   cx2$residuals <- NULL
   cx2$terms <- NULL
+  
+  cx2$coxph.object <- coxph.object
   
   class(cx2) <- 'coxph.relsurv'
   
