@@ -142,7 +142,9 @@
   # relsurv part:
   relsurv.coefficients <- list()
   relsurv.var <- list()
+  relsurv.mods <- list()
 
+  ie <- 1
   for(st in split.transitions){
     if(!missing(init)){
       init <- rep(init_arg, relsurv_no_of_covs[[as.character(st)]])
@@ -161,9 +163,13 @@
 
     relsurv.coefficients <- append(relsurv.coefficients, list(mod$coefficients))
     relsurv.var <- append(relsurv.var, list(mod$var))
+    
+    relsurv.mods[[ie]] <- mod
+    ie <- ie+1
   }
   names(relsurv.coefficients) <- split.transitions
   names(relsurv.var) <- split.transitions
+  names(relsurv.mods) <- split.transitions
   
   cx$relsurv.coefficients <- relsurv.coefficients
   cx$relsurv.var <- relsurv.var
@@ -193,6 +199,7 @@
   cx2$terms <- NULL
   
   cx2$coxph.object <- coxph.object
+  cx2$relsurv.mods <- relsurv.mods
   
   class(cx2) <- 'coxph.relsurv'
   
