@@ -39,6 +39,8 @@ df$country <- ifelse(df$country=='Netherlands', 'Netherlands, The', 'Denmark')
 
 cause_vec <- ifelse(df$status==0, 2, sample(c(0,1,2), size=nrow(df %>% filter(status==1)), replace = T))
 
+############## #
+
 # Cox model with different covariate
 cx <- coxph(Surv(Tstart,Tstop,status)~age.1+age.2+sexmale.2+age.3+strata(trans),
             data=df,method="breslow")
@@ -60,3 +62,26 @@ cx2
 print(cx2)
 summary(cx2)
 print(summary(cx2))
+
+############# #
+
+newdata <- data.frame(trans=1:3,age.1=c(65,0,0),age.2=c(0,65,0),sexmale.2=c(0,1,0), age.3=c(0,0,65),strata=1:3, 
+                      age=65, sex='male', year=as.Date('2010-01-01'), country='Denmark')
+
+cx <- coxph(Surv(Tstart,Tstop,status)~age.1+age.2+sexmale.2+age.3+strata(trans),
+                     data=df)
+mod <- msfit(cx,newdata,trans=tmat)
+
+cx2 <- coxph.relsurv(Surv(Tstart,Tstop,status)~age.1+age.2+sexmale.2+age.3+strata(trans),
+                     data=df, split.transitions = 2:3, ratetable = joinpoptab,
+                     rmap = list(age=age*365.241))
+mod_rs <- msfit.coxph.relsurv(cx2,newdata = newdata, trans = tmat)
+
+library(ggplot2)
+ggplot(mod$Haz %>% mutate(trans=factor(trans)))+
+  geom_step(aes(time, Haz, color=trans, group=trans))
+
+ggplot(mod_rs$Haz %>% mutate(trans=factor(trans)))+
+  geom_step(aes(time, Haz, color=trans, group=trans))
+
+

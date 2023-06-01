@@ -25,7 +25,7 @@ tglong <- rbind(tglong,tglong,tglong,tglong,tglong)
 
 
 # Cox model with different covariate
-cx <- coxph(Surv(Tstart,Tstop,status)~x1.1+x2.2+x2.3+strata(trans),
+cx <- coxph(Surv(Tstart,Tstop,status)~x1.1+x2.2+strata(trans),
             data=tglong,method="breslow")
 cx
 summary(cx)
@@ -35,18 +35,19 @@ cx2 <- coxph.relsurv(Surv(Tstart,Tstop,status)~x1.1+x2.2+x2.3+strata(trans),
                        mutate(Tstop=Tstop+runif(nrow(.)), 
                               x1.2=x1.2+runif(nrow(.)), 
                               x1.1=x1.1+runif(nrow(.))), 
-                     split.transitions = c(2,3),
+                     split.transitions = c(2:3),
                      rmap = list(age=age))
 cx2
 summary(cx2)
 
 # new data, to check whether results are the same for transition 1 as
 # those in appendix E.1 of Therneau & Grambsch (2000)
-newdata <- data.frame(trans=1:3,x1.1=c(0,0,0),x2.2=c(0,1,0),strata=1:3)
+newdata <- data.frame(trans=1:3,x1.1=c(0,0,0),x2.2=c(0,1,0),x2.3=c(0,0,1),strata=1:3, 
+                      age=65*365.241, sex='male', year=as.Date('2010-01-01'))
 mod <- msfit(cx,newdata,trans=tmat)
 mod
 
-msfit.coxph.relsurv(cx2,newdata = newdata, trans = tmat)
+mod_rs <- msfit.coxph.relsurv(cx2,newdata = newdata, trans = tmat)
 
 
 
