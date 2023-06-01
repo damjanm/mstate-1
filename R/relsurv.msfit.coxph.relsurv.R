@@ -68,7 +68,7 @@
       # Take the subset we need:
       # df_subset <- data[(data$from == transitions[i,1]) &
       #                     (data$to == transitions[i,2]),]
-      df_subset <- df_p[0,]  #DELETE THIS
+      df_subset <- df_p[1,]  #DELETE THIS
 
       # Find first time, when a jump happens:
       wh_jump <- which.max(df_e$Haz>0)
@@ -86,10 +86,28 @@
         }
       } else{
         # Calculate hazards:
-        # Hazs <- haz_function(Surv(Tstop, status)~1, data = df_subset, ratetable = ratetable,
-        #                      rmap = rmap,
-        #                      add.times = df_p$time, include.all.times = FALSE)
-        # 
+        
+        newdata_tmp <- newdata[newdata$trans==trans_1,]
+        mod_tmp <- coxph.relsurv$relsurv.mods[[as.character(trans_1)]]
+        mod_names <- names(mod_tmp$coefficients)
+        
+        check_covs <- mod_names[!(mod_names %in% colnames(newdata_tmp))]
+        if(length(check_covs)>0) stop(paste0('Please define covariate(s) ', check_covs, ' in the newdata argument.'))
+
+        predict_tmp <- relsurv:::predict.rsadd(mod_tmp, newdata=newdata_tmp)
+        
+        ####### #
+        # Ta del tukaj - moras ga popraviti, zaenkrat vleces case. Namesto to, hoces te find_times dati v predict.rsadd
+        find_times <- df_p$time[!(df_p$time %in% predict_tmp$time)]
+        df_tmp <- data.frame(time=find_times, Haz.e=NA, Haz.p=NA)
+
+        predict_tmp2 <- rbind(predict_tmp, df_tmp)
+        
+        predict_tmp2 <- predict_tmp2[order(predict_tmp2$time),]
+        predict_tmp2$Haz.e <- mstate:::NAfix(predict_tmp2$Haz.e, 0)
+        predict_tmp2$Haz.p <- mstate:::NAfix(predict_tmp2$Haz.p, 0)
+        ####### #
+        
         # # Calculate hazards at the wanted times
         # wh <- which(Hazs$time %in% (df_p$time))
         # wh_l <- c(NA, wh[1:(length(wh)-1)])+1
@@ -107,11 +125,11 @@
 
         # Population hazards:
         df_p$trans <- trans_2[1]
-        # df_p$Haz <- cumsum(haz.pop)
+        df_p$Haz <- predict_tmp2$Haz.p
 
         # Excess hazards:
         df_e$trans <- trans_2[2]
-        # df_e$Haz <- df_e$Haz - df_p$Haz 
+        df_e$Haz <- predict_tmp2$Haz.e
         # Check: plot(1:length(haz.pop), (Haz[Haz$trans == trans_1, "Haz"] - df_e$Haz - df_p$Haz), type="l")
 
         # Make the times fully equal as in the msfit object:
