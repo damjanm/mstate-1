@@ -1,4 +1,27 @@
-
+#' Compute subject-specific transition hazards with (co-)variances from coxph.relsurv 
+#' 
+#' An extension of the msfit function for coxph.relsurv
+#' @param coxph.relsurv A coxph.relsurv object
+#' @param newdata A data frame with the same variable names as those that appear in the \code{coxph.relsurv} formula
+#' @param variance Submitted to msfit for the overall hazards
+#' @param vartype Submitted to msfit for the overall hazards
+#' @param trans Transition matrix describing the states and transitions in the
+#' multi-state model. See \code{trans} in \code{\link{msprep}} for more
+#' detailed information
+#' @return An object of class \code{"msfit"}, which is a list containing
+#' \item{Haz }{A data frame with \code{time}, \code{Haz}, \code{trans},
+#' containing the estimated subject-specific hazards for each of the
+#' transitions in the multi-state model} \item{varHaz }{A data frame with
+#' \code{time}, \code{Haz}, \code{trans1}, \code{trans2} containing the
+#' variances (\code{trans1}=\code{trans2}) and covariances
+#' (\code{trans1}<\code{trans2}) of the estimated hazards. This element is only
+#' returned when \code{variance}=\code{TRUE}} \item{trans}{The extended transition
+#' matrix}
+#' 
+#' @author Damjan Manevski \email{damjan.manevski@@mf.uni-lj.si}
+#' @seealso \code{\link{coxph.relsurv}}, \code{\link{msfit.relsurv}}, \code{\link[relsurv]{rsadd}}
+#' 
+#' @export
 `msfit.coxph.relsurv` <- function(coxph.relsurv, 
                                 newdata, 
                                 variance = TRUE,
@@ -104,8 +127,8 @@
         predict_tmp2 <- rbind(predict_tmp, df_tmp)
         
         predict_tmp2 <- predict_tmp2[order(predict_tmp2$time),]
-        predict_tmp2$Haz.e <- mstate:::NAfix(predict_tmp2$Haz.e, 0)
-        predict_tmp2$Haz.p <- mstate:::NAfix(predict_tmp2$Haz.p, 0)
+        predict_tmp2$Haz.e <- NAfix(predict_tmp2$Haz.e, 0)
+        predict_tmp2$Haz.p <- NAfix(predict_tmp2$Haz.p, 0)
         ####### #
         
         # # Calculate hazards at the wanted times
