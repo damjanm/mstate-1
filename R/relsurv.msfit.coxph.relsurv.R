@@ -28,6 +28,8 @@
                                 vartype = c("aalen", "greenwood"),
                                 trans){
 
+  # For now:
+  variance <- FALSE
   
   trans_new <- modify_transMat(trans, object$split.transitions)
   

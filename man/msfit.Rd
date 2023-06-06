@@ -14,7 +14,8 @@ msfit(
 }
 \arguments{
 \item{object}{A \code{\link[survival:coxph]{coxph}} object describing the
-fit of the multi-state model}
+fit of the multi-state model. If a \code{\link{coxph.relsurv}} is supplied,
+then function \code{\link{msfit.coxph.relsurv}} is performed.}
 
 \item{newdata}{A data frame with the same variable names as those that
 appear in the \code{coxph} formula. Its use is somewhat different from

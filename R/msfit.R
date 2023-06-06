@@ -15,7 +15,8 @@
 #' recommended.
 #' 
 #' @param object A \code{\link[survival:coxph]{coxph}} object describing the
-#' fit of the multi-state model
+#' fit of the multi-state model. If a \code{\link{coxph.relsurv}} is supplied,
+#' then function \code{\link{msfit.coxph.relsurv}} is performed.
 #' @param newdata A data frame with the same variable names as those that
 #' appear in the \code{coxph} formula. Its use is somewhat different from
 #' \code{\link[survival:survfit]{survfit}}. See Details.  The argument
@@ -104,6 +105,11 @@
 ###     vartype: aalen (default), greenwood is only supported in absence
 ###         of newdata
 ###     trans: the transition matrix of the multi-state model
+    
+    if(inherits(object, 'coxph.relsurv')){
+      return(msfit.coxph.relsurv(object, newdata, variance, vartype, trans))
+    }
+    
     if(!is.null((object$call)$weights) || !is.null(object$weights))
         stop("msfit cannot (yet) compute the result for a weighted model")
     Terms <- terms(object)

@@ -5,15 +5,15 @@
 \title{Compute subject-specific transition hazards with (co-)variances from coxph.relsurv}
 \usage{
 msfit.coxph.relsurv(
-  coxph.relsurv,
+  object,
   newdata,
-  variance = TRUE,
+  variance = FALSE,
   vartype = c("aalen", "greenwood"),
   trans
 )
 }
 \arguments{
-\item{coxph.relsurv}{A coxph.relsurv object}
+\item{object}{A coxph.relsurv object}
 
 \item{newdata}{A data frame with the same variable names as those that appear in the \code{coxph.relsurv} formula}
 
