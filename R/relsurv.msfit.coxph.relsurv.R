@@ -1,7 +1,7 @@
 #' Compute subject-specific transition hazards with (co-)variances from coxph.relsurv 
 #' 
 #' An extension of the msfit function for coxph.relsurv
-#' @param coxph.relsurv A coxph.relsurv object
+#' @param object A coxph.relsurv object
 #' @param newdata A data frame with the same variable names as those that appear in the \code{coxph.relsurv} formula
 #' @param variance Submitted to msfit for the overall hazards
 #' @param vartype Submitted to msfit for the overall hazards
@@ -22,24 +22,21 @@
 #' @seealso \code{\link{coxph.relsurv}}, \code{\link{msfit.relsurv}}, \code{\link[relsurv]{rsadd}}
 #' 
 #' @export
-`msfit.coxph.relsurv` <- function(coxph.relsurv, 
+`msfit.coxph.relsurv` <- function(object, 
                                 newdata, 
-                                variance = TRUE,
+                                variance = FALSE,
                                 vartype = c("aalen", "greenwood"),
                                 trans){
+
   
-  # Zaenkrat:
-  variance <- FALSE
-  
-  
-  trans_new <- modify_transMat(trans, coxph.relsurv$split.transitions)
+  trans_new <- modify_transMat(trans, object$split.transitions)
   
   
-  msf <- msfit(coxph.relsurv$coxph.object, newdata = newdata, variance = variance, vartype = vartype, trans = trans)
+  msf <- msfit(object$coxph.object, newdata = newdata, variance = variance, vartype = vartype, trans = trans)
   
   all_trans <- unique(as.numeric(msf$trans))
   all_trans <- all_trans[!is.na(all_trans)]
-  wh <- (all_trans %in% coxph.relsurv$split.transitions)
+  wh <- (all_trans %in% object$split.transitions)
   trans_non_split <- all_trans[!wh]
   trans_split <- all_trans[wh]
   
@@ -66,7 +63,7 @@
     
     # We deal differently based on the type of transition
     # (whether we have to split the transition or not):
-    if(!(trans_1 %in% coxph.relsurv$split.transitions)){
+    if(!(trans_1 %in% object$split.transitions)){
       # The adequate transition in trans_new:
       trans_2 <- trans_new[rownames(trans)[transitions[i,1]],
                            colnames(trans)[transitions[i,2]]]
@@ -111,7 +108,7 @@
         # Calculate hazards:
         
         newdata_tmp <- newdata[newdata$trans==trans_1,]
-        mod_tmp <- coxph.relsurv$relsurv.mods[[as.character(trans_1)]]
+        mod_tmp <- object$relsurv.mods[[as.character(trans_1)]]
         mod_names <- names(mod_tmp$coefficients)
         
         check_covs <- mod_names[!(mod_names %in% colnames(newdata_tmp))]
