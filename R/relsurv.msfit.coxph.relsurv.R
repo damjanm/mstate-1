@@ -117,7 +117,7 @@
         check_covs <- mod_names[!(mod_names %in% colnames(newdata_tmp))]
         if(length(check_covs)>0) stop(paste0('Please define covariate(s) ', check_covs, ' in the newdata argument.'))
 
-        predict_tmp <- relsurv:::predict.rsadd(mod_tmp, newdata=newdata_tmp)
+        predict_tmp <- relsurv::predict.rsadd(mod_tmp, newdata=newdata_tmp)
         
         ####### #
         # Ta del tukaj - moras ga popraviti, zaenkrat vleces case. Namesto to, hoces te find_times dati v predict.rsadd
@@ -194,6 +194,7 @@
   
   # Save the new values:
   if(variance){
+    varHaz_new <- NA
     res <- list(Haz=Haz_new,varHaz=varHaz_new,trans=trans_new)
   } else{
     res <- list(Haz=Haz_new,trans=trans_new)

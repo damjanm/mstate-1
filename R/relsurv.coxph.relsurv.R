@@ -153,7 +153,7 @@
     if(!missing(cause)){
       cause <- cause_arg[data$trans==st]
     }
-    
+
     mod <- relsurv::rsadd(formula = relsurv_formula[[as.character(st)]],
                    data = data[data$trans==st,],
                    ratetable = ratetable, na.action=na.action,
