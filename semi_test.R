@@ -48,17 +48,10 @@ mod <- msfit(cx,newdata,trans=tmat)
 mod
 
 mod_rs <- msfit.coxph.relsurv(cx2,newdata = newdata, trans = tmat)
+mod_rs
 
-
-
-
-
-
-
-
-
-pt <- probtrans(mod,predt=0)
-
+pt_rs <- probtrans(mod_rs,predt=0, variance = FALSE)
+pt_rs[[1]]
 
 
 # Non-parametric:

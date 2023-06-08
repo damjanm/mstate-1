@@ -1,7 +1,7 @@
 # install.packages('C:/Users/dmanevski/Dropbox (MF Uni LJ)/Damjan Manevski/Research/relsurv/relsurv_2.2-9.tar.gz', repos=NULL, type='source')
 # install.packages('C:/Users/dame_/Dropbox (MF Uni LJ)/Damjan Manevski/Research/relsurv/relsurv_2.2-9.tar.gz', repos=NULL, type='source')
 
-install.packages('C:/Users/dmanevski/Documents/GitHub/mstate_0.3.2.tar.gz', repos=NULL, type='source')
+# install.packages('C:/Users/dmanevski/Documents/GitHub/mstate_0.3.2.tar.gz', repos=NULL, type='source')
 
 
 # Packages:
@@ -76,6 +76,8 @@ cx2 <- coxph.relsurv(Surv(Tstart,Tstop,status)~age.1+age.2+sexmale.2+age.3+strat
                      data=df, split.transitions = 2:3, ratetable = joinpoptab,
                      rmap = list(age=age*365.241))
 mod_rs <- msfit.coxph.relsurv(cx2,newdata = newdata, trans = tmat)
+mod_rs2 <- msfit(cx2,newdata = newdata, trans = tmat)
+identical(mod_rs, mod_rs2)
 
 library(ggplot2)
 ggplot(mod$Haz %>% mutate(trans=factor(trans)))+
@@ -83,5 +85,61 @@ ggplot(mod$Haz %>% mutate(trans=factor(trans)))+
 
 ggplot(mod_rs$Haz %>% mutate(trans=factor(trans)))+
   geom_step(aes(time, Haz, color=trans, group=trans))
+
+mod$Haz %>% 
+  group_by(trans) %>% 
+  summarise(Haz=tail(Haz, 1))
+
+mod_rs$Haz %>% 
+  group_by(trans) %>% 
+  summarise(Haz=tail(Haz, 1))
+
+
+
+mod_summed <- mod_rs$Haz %>% 
+  mutate(trans2=ifelse(trans==1,1, ifelse(trans %in% 2:3, 2, 3))) %>% 
+  group_by(time, trans2) %>% 
+  summarise(Haz=sum(Haz)) %>% 
+  select(time, Haz, trans=trans2) %>% 
+  arrange(trans, time)
+
+ggplot(mod$Haz %>% 
+         left_join(mod_summed, by=c('time', 'trans')) %>% 
+         rename(Haz_obs=Haz.x, Haz_sum=Haz.y) %>% 
+         mutate(trans=factor(trans)))+
+  geom_step(aes(time, Haz_obs-Haz_sum, color=trans, group=trans)) +
+  facet_wrap(~trans)
+
+
+
+
+
+
+
+prob <- probtrans(mod, predt = 0, variance=FALSE)
+
+prob_rs <- probtrans(mod_rs, predt = 0, variance=FALSE)
+prob_rs[[1]] %>% head
+
+plot(prob_rs)
+
+
+
+prob_summed <- prob_rs[[1]] %>% 
+  mutate(pstate3=pstate3+pstate4) %>% 
+  mutate(pstate4=pstate5+pstate6) %>% 
+  select(-pstate5, -pstate6)
+
+ggplot(prob[[1]] %>% 
+         left_join(prob_summed, by=c('time')) %>% 
+         mutate(pstate1_d = pstate1.x-pstate1.y) %>% 
+         mutate(pstate2_d = pstate2.x-pstate2.y) %>% 
+         mutate(pstate3_d = pstate3.x-pstate3.y) %>% 
+         mutate(pstate4_d = pstate4.x-pstate4.y) %>% 
+         select(time, pstate1_d, pstate2_d, pstate3_d, pstate4_d) %>% 
+         tidyr::gather(key, pstate, -time)
+         )+
+  geom_step(aes(time, pstate, color=key, group=key)) +
+  facet_wrap(~key)
 
 
