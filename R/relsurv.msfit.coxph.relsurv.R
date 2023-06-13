@@ -29,7 +29,7 @@
                                 trans){
 
   # For now:
-  variance <- FALSE
+  variance <- TRUE
   
   trans_new <- modify_transMat(trans, object$split.transitions)
   
@@ -38,11 +38,16 @@
   
   all_trans <- unique(as.numeric(msf$trans))
   all_trans <- all_trans[!is.na(all_trans)]
+  all_trans <- sort(all_trans)
   wh <- (all_trans %in% object$split.transitions)
   trans_non_split <- all_trans[!wh]
   trans_split <- all_trans[wh]
   
   Haz_non_split <- subset(msf$Haz, trans %in% trans_non_split)
+  # Prepare column for new transition numbers
+  colnames(Haz_non_split)[3] <- 'trans_old'
+  Haz_non_split$trans <- 0
+  
   Haz_split <- msf$Haz[0,]
   
   
@@ -63,6 +68,7 @@
     # The transition in trans:
     trans_1 <- trans[transitions[i,1], transitions[i,2]]
     
+    
     # We deal differently based on the type of transition
     # (whether we have to split the transition or not):
     if(!(trans_1 %in% object$split.transitions)){
@@ -71,8 +77,9 @@
                            colnames(trans)[transitions[i,2]]]
       # Save the linkage:
       link_trans[[ trans_1 ]] <- trans_2
-      
-      Haz_non_split$trans[Haz_non_split$trans==trans_1] <- trans_2
+
+      whi <- (Haz_non_split$trans_old==trans_1)
+      Haz_non_split$trans[whi] <- rep(trans_2, sum(whi))
     }
     else{
       # The adequate transition in trans_new:
@@ -169,6 +176,10 @@
       Haz_split <- rbind(Haz_split, df_p, df_e)
     }
   }
+  
+  # Remove old column:
+  Haz_non_split$trans_old <- NULL
+  
   Haz_new <- rbind(Haz_non_split, Haz_split)
   ordering <- order(Haz_new[,"trans"])
   Haz_new <- Haz_new[ordering,,drop=FALSE]

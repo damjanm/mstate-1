@@ -103,13 +103,14 @@
   
   ##### #
   # Prepare new formula for coxph:
-  av <- deparse(formula[[3]])
+  av <- deparse1(formula[[3]])
   kovs <- strsplit(av, '\\+')[[1]]
   
   # Helper function for matching transitions:
   find_trans <- function(x){
     x <- gsub(" ", "", x, fixed = TRUE)
-    substr(x, nchar(x)-1, nchar(x))
+    x_2 <- strsplit(x, ".", fixed = TRUE)[[1]]
+    paste0('.', x_2[length(x_2)])
   }
   
   # Prepare relsurv formulas:
