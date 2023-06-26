@@ -1,8 +1,8 @@
 # install.packages('C:/Users/dmanevski/Dropbox (MF Uni LJ)/Damjan Manevski/Research/relsurv/relsurv_2.2-9.tar.gz', repos=NULL, type='source')
 # install.packages('C:/Users/dame_/Dropbox (MF Uni LJ)/Damjan Manevski/Research/relsurv/relsurv_2.2-9.tar.gz', repos=NULL, type='source')
 
-# install.packages('C:/Users/dmanevski/Documents/GitHub/mstate_0.3.2.tar.gz', repos=NULL, type='source')
-
+install.packages('C:/Users/dame_/Documents/GitHub/mstate_0.3.2.tar.gz', repos=NULL, type='source')
+install.packages('C:/Users/dame_/Dropbox (MF Uni LJ)/Damjan Manevski/Research/relsurv/relsurv_2.3-1.tar.gz', repos=NULL, type='source')
 
 # Packages:
 library(survival)
@@ -11,9 +11,10 @@ library(dplyr)
 library(mstate)
 
 # Load anonymised data:
-j <- read.table("C:/Users/dmanevski/Dropbox (MF Uni LJ)/Damjan Manevski/Research/2019 Liesbeth/MDS_Damjan/anonymised_mds.txt",header = TRUE)
-# j <- read.table("C:/Users/dame_/Dropbox (MF Uni LJ)/Damjan Manevski/Research/2019 Liesbeth/MDS_Damjan/anonymised_mds.txt",header = TRUE)
-load("C:/Users/dmanevski/Dropbox (MF Uni LJ)/Damjan Manevski/Research/2019 Liesbeth/MDS_Damjan/joinpoptab.RData")
+# j <- read.table("C:/Users/dmanevski/Dropbox (MF Uni LJ)/Damjan Manevski/Research/2019 Liesbeth/MDS_Damjan/anonymised_mds.txt",header = TRUE)
+j <- read.table("C:/Users/dame_/Dropbox (MF Uni LJ)/Damjan Manevski/Research/2019 Liesbeth/MDS_Damjan/anonymised_mds.txt",header = TRUE)
+# load("C:/Users/dmanevski/Dropbox (MF Uni LJ)/Damjan Manevski/Research/2019 Liesbeth/MDS_Damjan/joinpoptab.RData")
+load("C:/Users/dame_/Dropbox (MF Uni LJ)/Damjan Manevski/Research/2019 Liesbeth/MDS_Damjan/joinpoptab.RData")
 
 colnames(j)[8] <- 'year'
 # j <- j[j$ID %in% 1:300,]
@@ -65,7 +66,7 @@ print(summary(cx2))
 
 ############# #
 
-newdata <- data.frame(trans=1:3,age.1=c(65,0,0),age.2=c(0,65,0),sexmale.2=c(0,1,0), age.3=c(0,0,65),strata=1:3, 
+newdata <- data.frame(trans=1:3,age.1=c(65,0,0),age.2=c(0,65,0),age.3=c(0,0,65),sexmale.2=c(0,1,0),strata=1:3, 
                       age=65, sex='male', year=as.Date('2010-01-01'), country='Denmark')
 
 cx <- coxph(Surv(Tstart,Tstop,status)~age.1+age.2+sexmale.2+age.3+strata(trans),
