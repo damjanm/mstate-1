@@ -1,0 +1,191 @@
+`msfit.aalen.relsurv` <- function(object, newdata, variance=TRUE, vartype=c("aalen","greenwood"), trans){
+  
+  trans_new <- modify_transMat(trans, object$split.transitions)
+  
+  all_trans <- unique(as.numeric(trans))
+  all_trans <- all_trans[!is.na(all_trans)]
+  all_trans <- sort(all_trans)
+  wh <- (all_trans %in% object$split.transitions)
+  trans_non_split <- all_trans[!wh]
+  trans_split <- all_trans[wh]
+  
+  msf <- msfit.aalen(object, newdata = newdata, variance = variance, vartype = vartype, trans = trans)
+  
+  Haz_non_split <- subset(msf$Haz, trans %in% trans_non_split)
+  # Prepare column for new transition numbers
+  colnames(Haz_non_split)[3] <- 'trans_old'
+  Haz_non_split$trans <- 0
+  
+  Haz_split <- msf$Haz[0,]
+  
+  # Get all transitions:
+  transitions <- which(!is.na(trans), arr.ind = TRUE)
+  link_trans <- list()
+  
+  #################### #
+  #  Prepare hazards
+  #################### #
+  
+  # We go through all original transitions and match them
+  # to the ones in the new transMat (trans_new).
+  # We then obtain the new hazards.
+  
+  for(i in 1:nrow(transitions)){
+    # The transition in trans:
+    trans_1 <- trans[transitions[i,1], transitions[i,2]]
+    
+    
+    # We deal differently based on the type of transition
+    # (whether we have to split the transition or not):
+    if(!(trans_1 %in% object$split.transitions)){
+      # The adequate transition in trans_new:
+      trans_2 <- trans_new[rownames(trans)[transitions[i,1]],
+                           colnames(trans)[transitions[i,2]]]
+      # Save the linkage:
+      link_trans[[ trans_1 ]] <- trans_2
+      
+      whi <- (Haz_non_split$trans_old==trans_1)
+      Haz_non_split$trans[whi] <- rep(trans_2, sum(whi))
+    }
+    else{
+      # The adequate transition in trans_new:
+      trans_2 <- c(trans_new[rownames(trans)[transitions[i,1]],
+                             paste0(colnames(trans)[transitions[i,2]], ".p")],
+                   trans_new[rownames(trans)[transitions[i,1]],
+                             paste0(colnames(trans)[transitions[i,2]], ".e")])
+      # Save the linkage:
+      link_trans[[ trans_1 ]] <- trans_2
+      
+      
+      # Prepare pop. and excess hazard objects:
+      df_p <- df_e <- subset(msf$Haz, trans==trans_1)
+      
+      # Take the subset we need:
+      # df_subset <- data[(data$from == transitions[i,1]) &
+      #                     (data$to == transitions[i,2]),]
+      df_subset <- df_p[1,]  #DELETE THIS
+      
+      # Find first time, when a jump happens:
+      wh_jump <- which.max(df_e$Haz>0)
+      is_jump <- any(df_e$Haz>0)
+      if(!is_jump){
+        # if(!(link_trans_ind == TRUE & substitution == FALSE)){ # If it's not called when bootstrapping
+        stop(paste0("There are no events occurring in transition ", trans_1, ". Please remove it from the split.transitions argument."))
+        # }
+      }
+      
+      if(nrow(df_subset)==0 | nrow(df_p)==0){
+        if(nrow(df_p)>0){
+          df_p$trans <- trans_2[1]
+          df_e$trans <- trans_2[2]
+        }
+      } else{
+        # Calculate hazards:
+        
+        newdata_tmp <- newdata[newdata$trans==trans_1,]
+        mod_tmp <- object$relsurv.mods[[as.character(trans_1)]]
+        mod_names <- colnames(mod_tmp$coefficients)
+        
+        check_covs <- mod_names[!(mod_names %in% colnames(newdata_tmp))]
+        check_covs <- check_covs[!(check_covs %in% c('time', '(Intercept)'))]
+        if(length(check_covs)>0) stop(paste0('Please define covariate(s) ', check_covs, ' in the newdata argument.'))
+        
+        predict_tmp <- relsurv:::predict.aalen.relsurv(mod_tmp, newdata=newdata_tmp)
+        
+        ####### #
+        # Ta del tukaj - moras ga popraviti, zaenkrat vleces case. Namesto to, hoces te find_times dati v predict.rsadd
+        find_times <- df_p$time[!(df_p$time %in% predict_tmp$time)]
+        df_tmp <- data.frame(time=find_times, Haz.e=NA, Haz.p=NA)
+        
+        predict_tmp2 <- rbind(predict_tmp, df_tmp)
+        
+        predict_tmp2 <- predict_tmp2[order(predict_tmp2$time),]
+        predict_tmp2$Haz.e <- NAfix(predict_tmp2$Haz.e, 0)
+        predict_tmp2$Haz.p <- NAfix(predict_tmp2$Haz.p, 0)
+        
+        if((!(0 %in% df_p$time)) & predict_tmp2[1,1]==0){
+          predict_tmp2 <- predict_tmp2[2:nrow(predict_tmp2),]
+        }
+        ####### #
+        
+        # # Calculate hazards at the wanted times
+        # wh <- which(Hazs$time %in% (df_p$time))
+        # wh_l <- c(NA, wh[1:(length(wh)-1)])+1
+        # wh_l[1] <- 1
+        # 
+        # haz.pop <- sapply(1:length(wh),
+        #                   function(x) sum(Hazs$haz.pop[wh_l[x]:wh[x]]))
+        # haz.excess <- sapply(1:length(wh),
+        #                      function(x) sum(Hazs$haz.excess[wh_l[x]:wh[x]]))
+        # 
+        # Checks:
+        # plot(1:length(haz.pop), (df_p$Haz[1:length(haz.pop)] - cumsum(haz.pop + haz.excess)), type="l")
+        # plot(1:length(haz.pop), cumsum(haz.pop), type="l")
+        # plot(1:length(haz.pop), cumsum(haz.excess), type="l")
+        
+        # Population hazards:
+        df_p$trans <- trans_2[1]
+        df_p$Haz <- predict_tmp2$Haz.p
+        
+        # Excess hazards:
+        df_e$trans <- trans_2[2]
+        df_e$Haz <- predict_tmp2$Haz.e
+        # Check: plot(1:length(haz.pop), (Haz[Haz$trans == trans_1, "Haz"] - df_e$Haz - df_p$Haz), type="l")
+        
+        # Make the times fully equal as in the msfit object:
+        old_times <- msf$Haz$time[msf$Haz$trans == trans_1]
+        df_p$time <- old_times
+        df_e$time <- old_times
+        
+        # Check if cum. excess haz<0 after first event time:
+        # if(wh_jump<nrow(df_e) & substitution & any(df_e$Haz[(wh_jump+1):nrow(df_e)]<0)){
+        #   warning(paste0("The relative survival assumption that the observed hazard can be split in population and excess components might not hold for transition ", trans_1, ". Please check the estimated hazards. Consider removing transition ", trans_1, " from the split.transitions argument. \n"))
+        # }
+      }
+      
+      # Save:
+      Haz_split <- rbind(Haz_split, df_p, df_e)
+    }
+  }
+  
+  # Remove old column:
+  Haz_non_split$trans_old <- NULL
+  
+  Haz_new <- rbind(Haz_non_split, Haz_split)
+  ordering <- order(Haz_new[,"trans"])
+  Haz_new <- Haz_new[ordering,,drop=FALSE]
+  rownames(Haz_new) <- 1:nrow(Haz_new)
+  
+  
+  
+  
+  
+  # sf0 <- summary(survfit(object))
+  
+  
+  
+  # Pripraviti Haz: torej rabis time, Haz, trans.
+  # potem dobiti napovedi na podlagi modelov (rsadd hmmm)
+  # pol se varianca? zaenkrat prazna I guess
+  # Pogledaj se argumente, k jih je treba dodati (msfit/msfit.relsurv), recimo variance=FALSE
+  
+  #################### #
+  # 4. Return objects:
+  #################### #
+  
+  # Save the new values:
+  if(variance){
+    varHaz_new <- NA
+    res <- list(Haz=Haz_new,varHaz=varHaz_new,trans=trans_new)
+  } else{
+    res <- list(Haz=Haz_new,trans=trans_new)
+  }
+  
+  # If link_trans and bootstrap replications have to be added:
+  # if(link_trans_ind) res$link_trans <- link_trans
+  # if(bootstrap_ind) res$Haz.boot <- haz_boot
+  
+  class(res) <- "msfit"
+  return(res)
+  
+}
