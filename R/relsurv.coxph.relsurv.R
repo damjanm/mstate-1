@@ -27,8 +27,12 @@
                             ...
 ){
 
-  # TO DO:
-  # variance?
+  outcome_covs <- strsplit(deparse1(formula[[2]]), ',')[[1]]
+  outcome_covs[1] <- gsub('Surv\\(', '', outcome_covs[1])
+  outcome_covs[3] <- gsub('\\)', '', outcome_covs[3])
+  outcome_covs <- gsub(' ', '', outcome_covs)
+  Tsta <- outcome_covs[1]
+  Tsto <- outcome_covs[2]
 
   Call <- match.call()
   
@@ -82,18 +86,18 @@
   else if(time.format == "years"){
     if(max(data$time) > 100) warning("Your max time in the data is more than 100 years. If time is not stored in years, please use argument time.format. \n")
     
-    data$Tstart <- data$Tstart*Year
-    data$Tstop <- data$Tstop*Year
-    data$time <- data$time*Year
+    data[, Tsta] <- data[, Tsta]*Year
+    data[, Tsto] <- data[, Tsto]*Year
+    if(!is.null(data$time)) data$time <- data$time*Year
 
     time.format <- "days" # Fix argument
   }
   else if(time.format == "months"){
     if(max(data$time) > 600) warning("Your max time in the data is more than 600 months. If time is not stored in months, please use argument time.format. \n")
     
-    data$Tstart <- data$Tstart*Month
-    data$Tstop <- data$Tstop*Month
-    data$time <- data$time*Month
+    data[, Tsta] <- data[, Tsta]*Month
+    data[, Tsto] <- data[, Tsto]*Month
+    if(!is.null(data$time)) data$time <- data$time*Month
 
     time.format <- "days" # Fix argument
   }
@@ -118,18 +122,26 @@
   relsurv_no_of_covs <- list()
   for(st in split.transitions){
     relsurv_kovs_tmp <- kovs[grep(paste0('.', st), sapply(kovs, find_trans), fixed=TRUE)]
-    if(length(relsurv_kovs_tmp)==0) stop('In split.transitions you have supplied a transition for which there are no covariates in the formula.')
+    l_relsurv_kovs_tmp <- length(relsurv_kovs_tmp)
+    if(length(relsurv_kovs_tmp)==0){
+      relsurv_kovs_tmp <- '1'
+      l_relsurv_kovs_tmp <- 0
+      # stop('In split.transitions you have supplied a transition for which there are no covariates in the formula.')
+    } 
     relsurv_formula <- append(relsurv_formula, 
                               as.formula(paste0(deparse(formula[[2]]), '~', paste0(relsurv_kovs_tmp, collapse = '+'))))
     relsurv_no_of_covs <- append(relsurv_no_of_covs,
-                                 length(relsurv_kovs_tmp))
+                                 l_relsurv_kovs_tmp)
   }
   names(relsurv_formula) <- split.transitions
   names(relsurv_no_of_covs) <- split.transitions
   
 
   for(st in split.transitions){
-    kovs <- kovs[-grep(paste0('.', st), kovs, fixed=TRUE)]
+    find_kovs <- grep(paste0('.', st), kovs, fixed=TRUE)
+    if(!identical(find_kovs, integer(0))){
+      kovs <- kovs[-find_kovs]
+    }
   }
   
   kovs <- paste0(kovs, collapse='+')
@@ -270,7 +282,7 @@
   for(st in st_ch){
     coef <- x$relsurv.coefficients[[st]]
     se <- sqrt(diag(x$relsurv.var[[st]]))
-    
+    if(is.null(coef)) next
     tmp_j <- cbind(coef, exp(coef), se, 
                  coef/se, stats::pchisq((coef/se)^2, 
                                  1, lower.tail = FALSE))
