@@ -50,10 +50,12 @@
   
   for(st in st_ch){
     coef <- cox$relsurv.coefficients[[st]]
-    se <- sqrt(diag(cox$relsurv.var[[st]]))
+    se2 <- sqrt(diag(cox$relsurv.var[[st]]))
     
-    tmp_j <- cbind(coef, exp(coef), se, 
-                   coef/se, stats::pchisq((coef/se)^2, 
+    if(is.null(coef)) next
+    
+    tmp_j <- cbind(coef, exp(coef), se2, 
+                   coef/se2, stats::pchisq((coef/se2)^2, 
                                    1, lower.tail = FALSE))
     if(!exists('tmp_rs')){
       tmp_rs <- tmp_j
