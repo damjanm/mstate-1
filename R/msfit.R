@@ -110,6 +110,14 @@
       return(msfit.coxph.relsurv(object, newdata, variance, vartype, trans))
     }
     
+    if(inherits(object, 'aalen.model')){
+      if('split.transitions' %in% names(object)){
+        return(msfit.aalen.relsurv(object, newdata, variance, vartype, trans))
+      } else{
+        return(msfit.aalen(object, newdata, variance, vartype, trans))
+      }
+    }
+    
     if(!is.null((object$call)$weights) || !is.null(object$weights))
         stop("msfit cannot (yet) compute the result for a weighted model")
     Terms <- terms(object)
