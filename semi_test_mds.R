@@ -1,7 +1,11 @@
 # install.packages('C:/Users/dmanevski/Dropbox (MF Uni LJ)/Damjan Manevski/Research/relsurv/relsurv_2.2-9.tar.gz', repos=NULL, type='source')
 # install.packages('C:/Users/dame_/Dropbox (MF Uni LJ)/Damjan Manevski/Research/relsurv/relsurv_2.2-9.tar.gz', repos=NULL, type='source')
 
-install.packages('C:/Users/dame_/Documents/GitHub/mstate_0.3.2.tar.gz', repos=NULL, type='source')
+rm(list=ls())
+
+remove.packages('mstate')
+install.packages('C:/Users/dmanevski/Documents/GitHub/mstate_0.3.2.tar.gz', repos=NULL, type='source')
+
 install.packages('C:/Users/dame_/Dropbox (MF Uni LJ)/Damjan Manevski/Research/relsurv/relsurv_2.3-1.tar.gz', repos=NULL, type='source')
 
 # Packages:
@@ -11,10 +15,10 @@ library(dplyr)
 library(mstate)
 
 # Load anonymised data:
-# j <- read.table("C:/Users/dmanevski/Dropbox (MF Uni LJ)/Damjan Manevski/Research/2019 Liesbeth/MDS_Damjan/anonymised_mds.txt",header = TRUE)
-j <- read.table("C:/Users/dame_/Dropbox (MF Uni LJ)/Damjan Manevski/Research/2019 Liesbeth/MDS_Damjan/anonymised_mds.txt",header = TRUE)
-# load("C:/Users/dmanevski/Dropbox (MF Uni LJ)/Damjan Manevski/Research/2019 Liesbeth/MDS_Damjan/joinpoptab.RData")
-load("C:/Users/dame_/Dropbox (MF Uni LJ)/Damjan Manevski/Research/2019 Liesbeth/MDS_Damjan/joinpoptab.RData")
+j <- read.table("C:/Users/dmanevski/Dropbox (MF Uni LJ)/Damjan Manevski/Research/2019 Liesbeth/MDS_Damjan/anonymised_mds.txt",header = TRUE)
+# j <- read.table("C:/Users/dame_/Dropbox (MF Uni LJ)/Damjan Manevski/Research/2019 Liesbeth/MDS_Damjan/anonymised_mds.txt",header = TRUE)
+load("C:/Users/dmanevski/Dropbox (MF Uni LJ)/Damjan Manevski/Research/2019 Liesbeth/MDS_Damjan/joinpoptab.RData")
+# load("C:/Users/dame_/Dropbox (MF Uni LJ)/Damjan Manevski/Research/2019 Liesbeth/MDS_Damjan/joinpoptab.RData")
 
 colnames(j)[8] <- 'year'
 # j <- j[j$ID %in% 1:300,]
@@ -51,6 +55,10 @@ cx2 <- coxph.relsurv(Surv(Tstart,Tstop,status)~age.1+age.2+sexmale.2+age.3+strat
                      data=df, split.transitions = 2:3, ratetable = joinpoptab,
                      rmap = list(age=age*365.241), init=0,na.action = 'na.omit', bwin=-1,
                      centered = FALSE, cause=cause_vec)
+# cx2 <- coxph.relsurv(Surv(Tstart,Tstop,status)~age.1+age.2+sexmale.2+age.3+strata(trans),
+#                      data=df, split.transitions = 2:3, ratetable = joinpoptab,
+#                      rmap = list(age=age*365.241), init=0,na.action = 'na.omit', bwin=-1,
+#                      centered = FALSE, cause=cause_vec)
 cx2
 print(cx2)
 summary(cx2)
