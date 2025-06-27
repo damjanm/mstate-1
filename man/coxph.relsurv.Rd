@@ -24,7 +24,7 @@ coxph.relsurv(
 
 \item{data}{The data used for fitting the model}
 
-\item{na.action}{A missing-data filter function. This is applied to the model.frame after any subset argument has been used. Default is options()\$na.action}
+\item{na.action}{A missing-data filter function. This is applied to the model.frame after any subset argument has been used. Default is options()$na.action}
 
 \item{split.transitions}{An integer vector containing the numbered transitions that should be split. Use same numbering as in the given transition matrix}
 

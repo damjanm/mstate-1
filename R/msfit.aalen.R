@@ -1,14 +1,16 @@
 `msfit.aalen` <- function(object, newdata, variance=TRUE, vartype=c("aalen","greenwood"), trans){
   
+  # Find times:
   times <- object$coefficients[[1]][,1]
+  # Number of coefficients:
   lcoef <- length(object$coefficients)
   
-  
+  # Define Haz object:
   Haz <- data.frame(time=rep(times, lcoef), Haz=NA, trans=rep(1:lcoef, each=length(times)))
   
+  # Prepare Haz object:
   zac <- 1
   kon <- length(times)
-  
   tr_i <- 1
   for(i in object$coefficients){
 
@@ -34,9 +36,7 @@
       Haz_tmp <- tmp_df[,1]
     }
 
-    
-    # Haz_tmp <- rowSums(i[,2:ncol(i)])
-    
+    # Save:
     Haz$Haz[zac:kon] <- Haz_tmp
     
     zac <- kon+1

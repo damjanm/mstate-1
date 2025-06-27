@@ -4,7 +4,7 @@
 #' and model the corresponding excess hazards using relative survival.
 #' @param formula A formula object, with the response on the left of a ~ operator, and the terms on the right. The response must be a survival object as returned by the Surv function
 #' @param data The data used for fitting the model
-#' @param na.action A missing-data filter function. This is applied to the model.frame after any subset argument has been used. Default is options()\$na.action
+#' @param na.action A missing-data filter function. This is applied to the model.frame after any subset argument has been used. Default is options()$na.action
 #' @param split.transitions An integer vector containing the numbered transitions that should be split. Use same numbering as in the given transition matrix
 #' @param ratetable The population mortality table. A table of event rates, organized as a ratetable object, see for example relsurv::slopop. Default is slopop
 #' @param time.format Define the time format which is used in the data. Possible options: c('days', 'years', 'months'). Default is 'days'
@@ -148,7 +148,7 @@
   coxph_formula <- as.formula(paste0(deparse(formula[[2]]), '~', kovs))
   
   cx <- survival::coxph(formula=coxph_formula, data=data,
-                        na.action=na.action, ...)
+                        ...)
   coxph.object <- cx
 
   ##### #

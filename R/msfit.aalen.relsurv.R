@@ -90,7 +90,7 @@
         check_covs <- check_covs[!(check_covs %in% c('time', '(Intercept)'))]
         if(length(check_covs)>0) stop(paste0('Please define covariate(s) ', check_covs, ' in the newdata argument.'))
         
-        predict_tmp <- relsurv:::predict.aalen.relsurv(mod_tmp, newdata=newdata_tmp)
+        predict_tmp <- relsurv::predict.aalen.model(mod_tmp, newdata=newdata_tmp)
         
         ####### #
         # Ta del tukaj - moras ga popraviti, zaenkrat vleces case. Namesto to, hoces te find_times dati v predict.rsadd
