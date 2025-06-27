@@ -44,9 +44,11 @@
   trans_split <- all_trans[wh]
   
   Haz_non_split <- subset(msf$Haz, trans %in% trans_non_split)
-  # Prepare column for new transition numbers
-  colnames(Haz_non_split)[3] <- 'trans_old'
-  Haz_non_split$trans <- 0
+  if(nrow(Haz_non_split) > 0){
+    # Prepare column for new transition numbers
+    colnames(Haz_non_split)[3] <- 'trans_old'
+    Haz_non_split$trans <- 0
+  }
   
   Haz_split <- msf$Haz[0,]
   
@@ -120,8 +122,17 @@
         mod_tmp <- object$relsurv.mods[[as.character(trans_1)]]
         mod_names <- names(mod_tmp$coefficients)
         
-        check_covs <- mod_names[!(mod_names %in% colnames(newdata_tmp))]
-        if(length(check_covs)>0) stop(paste0('Please define covariate(s) ', check_covs, ' in the newdata argument.'))
+        # check_covs <- mod_names[!(mod_names %in% colnames(newdata_tmp))]
+        # if(length(check_covs)>0) stop(paste0('Please define covariate(s) ', check_covs, ' in the newdata argument.'))
+        
+        # Here is Owen's temporary solution
+        missing_covs <- setdiff(mod_names, colnames(newdata_tmp))
+        # Detect common basis expansion patterns (splines, interactions)
+        spline_like <- grepl(":", missing_covs) | grepl("ns\\(", missing_covs) | grepl("poly\\(", missing_covs)
+        # Warn only about real missing covariates
+        missing_real <- missing_covs[!spline_like]
+        # Check:
+        if(length(missing_real)>0) stop(paste0('Please define covariate(s) ', missing_real, ' in the newdata argument.'))
 
         predict_tmp <- relsurv::predict.rsadd(mod_tmp, newdata=newdata_tmp)
         
@@ -178,8 +189,10 @@
   }
   
   # Remove old column:
-  Haz_non_split$trans_old <- NULL
-  
+  if(nrow(Haz_non_split) >0){
+    Haz_non_split$trans_old <- NULL
+  }
+
   Haz_new <- rbind(Haz_non_split, Haz_split)
   ordering <- order(Haz_new[,"trans"])
   Haz_new <- Haz_new[ordering,,drop=FALSE]
