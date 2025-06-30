@@ -173,14 +173,14 @@
   if (mm != 0) 
     data <- cbind(data, X)
   attr(ratetable, "cutpoints") <- lapply(cutpoints, function(x) {
-    if(inherits(x, 'rtabledate')) class(x) <- 'date'
+    if(inherits(x, 'rtabledate')) class(x) <- 'Date'
     x
   })
   out <- list(data = data, R = R, status = status, start = start, 
               Y = Y, X = as.data.frame(X), m = mm, n = n, type = type, 
               Y.surv = Y.surv, Terms = Terms, ratetable = ratetable, 
               offset = offset, formula = formula, cause = cause, mvalue = mvalue, 
-              strata.keep = strata.keep)
+              strata.keep = strata.keep, keep = keep)
   na.action <- attr(m, "na.action")
   if (length(na.action)) 
     out$na.action <- na.action
