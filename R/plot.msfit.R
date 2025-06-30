@@ -35,6 +35,8 @@
 #' function details of \code{plot.probtrans} for details
 #' @param \dots Further arguments to plot
 #' 
+#' @method plot msfit
+#' 
 #' @return No return value
 #' 
 #' @author Hein Putter \email{H.Putter@@lumc.nl}
@@ -147,7 +149,9 @@ plot.msfit <- function(x,
     if (missing(lty)) lty <- rep(1, K)
     plot(msft, msfp[,1], type="s", ylim=ylim, xlab=xlab, ylab=ylab, col=cols[1], lwd=lwd,
          lty=lty[1], ...)
-    for (k in 2:K) lines(msft, msfp[,k], type="s", col=cols[k], lwd=lwd, lty=lty[k], ...)
+    if (K > 1)
+      for (k in 2:K)
+        lines(msft, msfp[,k], type="s", col=cols[k], lwd=lwd, lty=lty[k], ...)
     if (missing(legend.pos))
       legend("topleft", legend=legend, col=cols, lwd=lwd, lty=lty, bty=bty)
     else
