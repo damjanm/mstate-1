@@ -122,14 +122,10 @@
         stop("msfit cannot (yet) compute the result for a weighted model")
     Terms <- terms(object)
     strat <- attr(Terms, "specials")$strata
-    if (is.null(strat)) stop("object has to have strata() term")
     cluster <- attr(Terms, "specials")$cluster
     if (length(cluster)) stop("cluster terms are not supported")
     if (!is.null(attr(object$terms, "specials")$tt))
       stop("msfit cannot yet process coxph models with a tt term")
-    
-    # Not pretty, but avoids x=TRUE issues
-    if (!is.null(object[['x']])) object[['x']] <- NULL
 
     resp <-  attr(Terms, "variables")[attr(Terms, "response")]
     nvar <- length(object$coefficients)
@@ -204,11 +200,8 @@
       sf0 <- summary(survfit(object))
       norisk <- sf0$n.risk
       noevent <- sf0$n.event
-      
-      # Allows two-state models (same fix as when vartype = "aalen")
-      trans.new <- if (is.null(sf0$strata)) 1L else as.numeric(sf0$strata)
       sf0 <- data.frame(time=sf0$time,Haz=-log(sf0$surv),norisk=norisk,
-                        noevent=noevent, trans=trans.new)
+                        noevent=noevent, trans=as.numeric(sf0$strata))
       allt <- sort(unique(c(sf0$time,lasty)))
       nt <- length(allt)
       K <- nrow(to.trans2(trans))
@@ -269,12 +262,10 @@
       if (length(labels)==1) {
         if (labels == "strata(trans)") { # no covariates, no call to C
           sf0 <- summary(survfit(object))
-          trans.new <- if (is.null(sf0$strata)) 1L else as.numeric(sf0$strata)
           norisk <- sf0$n.risk
           noevent <- sf0$n.event
           sf0 <- data.frame(time=sf0$time,Haz=-log(sf0$surv),norisk=norisk,
-                            noevent=noevent,var=sf0$std.err^2/(sf0$surv)^2,
-                            trans=trans.new)
+                            noevent=noevent,var=sf0$std.err^2/(sf0$surv)^2,trans=as.numeric(sf0$strata))
           allt <- sort(unique(c(sf0$time,lasty)))
           nt <- length(allt)
           K <- max(sf0$trans)
