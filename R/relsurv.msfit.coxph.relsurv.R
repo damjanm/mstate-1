@@ -28,9 +28,6 @@
                                 vartype = c("aalen", "greenwood"),
                                 trans){
 
-  # For now:
-  variance <- TRUE
-  
   trans_new <- modify_transMat(trans, object$split.transitions)
   
   
@@ -215,10 +212,63 @@
   # 4. Return objects:
   #################### #
   
+  # Perform bootstrap if needed:
+  if(!is.null(object$boot.objects)){
+    all_times <- subset(Haz_new, trans==1)$time
+    no_trans <- max(trans_new, na.rm = TRUE)
+    
+    var_obj <- matrix(NA, length(object$boot.objects), length(all_times)*no_trans)
+    
+    Haz.boot <- vector('list', length=length(object$boot.objects))
+    
+    for(ie in 1:length(object$boot.objects)){
+      tmp0 <- msfit.coxph.relsurv(object$boot.objects[[ie]],
+                          newdata, variance=FALSE, trans=trans)
+      Haz.boot[[ie]] <- tmp0
+      tmp <- tmp0$Haz
+      
+      these_times <- subset(tmp, trans==1)$time
+      
+      diff_times <- all_times[!(all_times %in% these_times)]
+      
+      full_Haz <- rbind(tmp,
+            data.frame(time=rep(diff_times, no_trans),
+                       Haz=NA,
+                       trans=rep(1:no_trans, each=length(diff_times))
+            ))
+      full_Haz <- full_Haz[order(full_Haz$trans, full_Haz$time), ]
+      rownames(full_Haz) <- NULL
+      full_Haz$Haz <- NAfix(full_Haz$Haz, 0)
+      
+      full_Haz <- full_Haz[full_Haz$time %in% all_times,]
+      
+      var_obj[ie,] <- full_Haz$Haz
+      
+    }
+    
+    colVars <- function (x, na.rm = FALSE) {
+      f <- function(v, na.rm = na.rm) {
+        if (is.numeric(v) || is.logical(v) || is.complex(v)) 
+          stats::var(v, na.rm = na.rm)
+        else NA
+      }
+      return(unlist(lapply(x, f, na.rm = na.rm)))
+    }
+    
+    varHaz_new <- data.frame(time=rep(all_times, no_trans),
+                             varHaz=colVars(data.frame(var_obj)),
+                             trans1=rep(1:no_trans, each=length(all_times)),
+                             trans2=rep(1:no_trans, each=length(all_times))
+    )
+  }
+  
   # Save the new values:
   if(variance){
-    varHaz_new <- NA
-    res <- list(Haz=Haz_new,varHaz=varHaz_new,trans=trans_new)
+    if(!exists('varHaz_new')){
+      stop('Bootstrap option has to be run in coxph.relsurv.')
+    }
+    
+    res <- list(Haz=Haz_new,varHaz=varHaz_new,trans=trans_new, Haz.boot=Haz.boot)
   } else{
     res <- list(Haz=Haz_new,trans=trans_new)
   }

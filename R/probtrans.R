@@ -385,11 +385,12 @@
         # Prepare boot msfit object:
         haz_tmp <- object$Haz.boot[[i]]
         haz_tmp$b <- NULL
-        msfit_tmp <- list(Haz=haz_tmp, trans=trans)
-        class(msfit_tmp) <- "msfit"
-        
+        if(!inherits(haz_tmp, 'msfit')){
+          haz_tmp <- list(Haz=haz_tmp, trans=trans)
+          class(haz_tmp) <- "msfit"
+        }
         # save bootstrapped probtrans:
-        pt_tmp <- suppressWarnings(probtrans(msfit_tmp, predt=predt, direction=direction, variance = FALSE, covariance = FALSE))
+        pt_tmp <- suppressWarnings(probtrans(haz_tmp, predt=predt, direction=direction, variance = FALSE, covariance = FALSE))
         
         for(s in absorbing_false){
           pt_list[[s]][[i]] <- pt_tmp[[s]]

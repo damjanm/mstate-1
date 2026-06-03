@@ -20,12 +20,16 @@
 #' @seealso \code{\link{coxph}}, \code{\link{msfit.relsurv}}, \code{\link[relsurv]{rsadd}}
 #' 
 #' @export
-`coxph.relsurv` <- function(formula, data, na.action,
+`coxph.relsurv` <- function(formula, data, 
+                            var='exact', B,
+                            na.action,
                             split.transitions, ratetable = relsurv::slopop, 
                             time.format = "days", rmap, 
                             init, bwin, centered, cause,
                             ...
 ){
+  
+  data_orig <- data
 
   outcome_covs <- strsplit(deparse1(formula[[2]]), ',')[[1]]
   outcome_covs[1] <- gsub('Surv\\(', '', outcome_covs[1])
@@ -60,7 +64,8 @@
     centered <- FALSE
   }
   
-  if(!missing(rmap)){
+  if((!missing(rmap))
+     ){
     # if(substitution){
       rmap <- substitute(rmap)
     # }
@@ -215,6 +220,26 @@
   cx2$relsurv.mods <- relsurv.mods
   
   class(cx2) <- 'coxph.relsurv'
+  
+  fun_boot <- function(df){
+    # Call <- as.call(append(as.list(Call), list(isB=TRUE))) 
+    Call$var <- 'exact'
+    Call$data <- substitute(df)
+    eval(Call, envir = parent.frame())
+  }
+  if(var=='bootstrap'){
+    # Do bootstrap:
+    boot_vals <- msboot.coxph.relsurv(theta=fun_boot,data=data_orig, B=B)
+    # Save bootstrap var for coef:
+    diag(cx2$var) <- boot_vals[[1]]
+    # Save bootstrap var for relsurv coef:
+    for(is in split.transitions){
+      obje <- boot_vals[[2]]$variable
+      diag(cx2$relsurv.var[[as.character(is)]]) <- subset(boot_vals[[2]], 
+                                                          as.character(is) == substr(obje, nchar(obje), nchar(obje)))$value
+    }
+    cx2$boot.objects <- boot_vals[[3]]
+  }
   
   return(cx2)
 
