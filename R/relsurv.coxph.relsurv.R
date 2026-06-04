@@ -228,8 +228,10 @@
     eval(Call, envir = parent.frame())
   }
   if(var=='bootstrap'){
+    # Find id column name:
+    id_name <- colnames(data_orig)[1]
     # Do bootstrap:
-    boot_vals <- msboot.coxph.relsurv(theta=fun_boot,data=data_orig, B=B)
+    boot_vals <- msboot.coxph.relsurv(theta=fun_boot,data=data_orig, B=B, id = id_name)
     # Save bootstrap var for coef:
     diag(cx2$var) <- boot_vals[[1]]
     # Save bootstrap var for relsurv coef:
