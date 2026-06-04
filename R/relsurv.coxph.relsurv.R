@@ -154,6 +154,8 @@
   
   cx <- survival::coxph(formula=coxph_formula, data=data,
                         ...)
+  # Edit formula in call so that it prints well:
+  cx$call$formula <- cx$formula
   coxph.object <- cx
 
   ##### #
