@@ -234,16 +234,20 @@
       
       diff_times <- all_times[!(all_times %in% these_times)]
       
-      full_Haz <- rbind(tmp,
-            data.frame(time=rep(diff_times, no_trans),
-                       Haz=NA,
-                       trans=rep(1:no_trans, each=length(diff_times))
-            ))
-      full_Haz <- full_Haz[order(full_Haz$trans, full_Haz$time), ]
-      rownames(full_Haz) <- NULL
-      full_Haz$Haz <- NAfix(full_Haz$Haz, 0)
-      
-      full_Haz <- full_Haz[full_Haz$time %in% all_times,]
+      full_Haz <- tmp
+      # If needed, add times:
+      if(length(diff_times) > 0){
+        full_Haz <- rbind(tmp,
+                          data.frame(time=rep(diff_times, no_trans),
+                                     Haz=NA,
+                                     trans=rep(1:no_trans, each=length(diff_times))
+                          ))
+        full_Haz <- full_Haz[order(full_Haz$trans, full_Haz$time), ]
+        rownames(full_Haz) <- NULL
+        full_Haz$Haz <- NAfix(full_Haz$Haz, 0)
+        
+        full_Haz <- full_Haz[full_Haz$time %in% all_times,]
+      }
       
       var_obj[ie,] <- full_Haz$Haz
       
