@@ -30,8 +30,11 @@
 
   trans_new <- modify_transMat(trans, object$split.transitions)
   
+  # Run variance always (otherwise it doesn't work for larger data sets due to a problem in msfit):
+  variance_tmp <- TRUE
+  # When fixed, change variance_tmp->variance
   
-  msf <- msfit(object$coxph.object, newdata = newdata, variance = variance, vartype = vartype, trans = trans)
+  msf <- msfit(object$coxph.object, newdata = newdata, variance = variance_tmp, vartype = vartype, trans = trans)
   
   all_trans <- unique(as.numeric(msf$trans))
   all_trans <- all_trans[!is.na(all_trans)]
